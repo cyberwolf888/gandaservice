@@ -3,7 +3,7 @@
   <component name="WebServers">
     <option name="servers">
       <webServer id="6072d9bc-47f6-40ef-aa00-1e6168d58bd2" name="server" url="http://gandaedukasi.esy.es">
-        <fileTransfer host="gandaedukasi.esy.es" port="21" rootFolder="/public_html" username="u208850826">
+        <fileTransfer host="gandaedukasi.esy.es" port="21" rootFolder="/public_html" password="dfcddfcbdfc4dfcedfcbdf92df92df92" username="u208850826">
           <advancedOptions>
             <advancedOptions dataProtectionLevel="Private" />
           </advancedOptions>

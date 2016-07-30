@@ -13,6 +13,10 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
     use Authenticatable, Authorizable;
 
     protected $table = 'tb_users';
+
+    const SISWA = 'SW';
+    const PENGAJAR = 'PG';
+    const ADMIN = 'AD';
     /**
      * The attributes that are mass assignable.
      *
@@ -30,4 +34,12 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
     protected $hidden = [
         'password',
     ];
+    public function siswa()
+    {
+        return $this->hasOne('App\Models\Siswa', 'user_id');
+    }
+    public function pengajar()
+    {
+        return $this->hasOne('App\Models\Pengajar', 'user_id');
+    }
 }

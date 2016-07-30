@@ -15,5 +15,5 @@ $app->get('/', function () use ($app) {
     //return $app->version();
 });
 
-$app->get('/login',['as' => 'profile', 'uses' => 'UserController@login']);
+$app->post('/login',['as' => 'profile', 'uses' => 'UserController@login']);
 
