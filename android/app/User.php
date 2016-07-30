@@ -12,6 +12,7 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
 {
     use Authenticatable, Authorizable;
 
+    protected $table = 'tb_users';
     /**
      * The attributes that are mass assignable.
      *
