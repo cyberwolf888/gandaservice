@@ -19,3 +19,5 @@ $app->post('/login',['as' => 'login', 'uses' => 'UserController@login']);
 
 $app->post('/article',['as' => 'article', 'uses' => 'ArticleController@showAll']);
 
+$app->post('/getProfile/{type}', ['as' => 'get_profile', 'uses' => 'UserController@getProfle']);
+
