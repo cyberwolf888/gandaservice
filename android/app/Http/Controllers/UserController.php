@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cabang;
+use App\Models\MapelPengajar;
 use App\Models\Pengajar;
+use App\Models\TingkatPendidikan;
+use App\Models\TingkatPendidikanPengajar;
 use App\User;
 use Illuminate\Http\Request;
 
@@ -26,6 +29,7 @@ class UserController extends Controller
 
         $user = User::where('email',$email)
             ->where('password',md5($password))
+            ->where('status',1)
             ->first();
         if($user && count($user)>0){
             if($user->type == User::SISWA){
@@ -71,6 +75,86 @@ class UserController extends Controller
                     return response()->json(['status'=>1]);
                 }
             }
+        }else{
+            return response()->json(['status'=>0]);
+        }
+
+    }
+
+    public function cekProfilePengajar(Request $request)
+    {
+        $user_id = $request->input('user_id');
+        $user = User::find($user_id);
+        if($user && count($user)>0){
+            $pengajar = $user->pengajar;
+            $isNewAccount = 0;
+            $tingkat_pengajar = TingkatPendidikanPengajar::where('pengajar_id',$pengajar->id)->count();
+            $mapel_pengajar = MapelPengajar::where('pengajar_id',$pengajar->id)->count();
+            if($tingkat_pengajar == 0 && $mapel_pengajar == 0){
+                $isNewAccount=1;
+            }
+            return response()->json(['status'=>1,'isNewAccount'=>$isNewAccount]);
+        }else{
+            return response()->json(['status'=>0]);
+        }
+    }
+
+    public function complatingProfile(Request $request)
+    {
+        $success = false;
+        $user = User::find($request->input('user_id'));
+        $pengajar = $user->pengajar;
+        $tingkat_pendidikan = explode(';', substr($request->input('tingkat_pendidikan'), 0,-1));
+        if (count($tingkat_pendidikan)>0){
+            foreach ($tingkat_pendidikan as $key=>$mtingkat){
+                $model = new TingkatPendidikanPengajar();
+                $model->pengajar_id = $pengajar->id;
+                $model->tingkat_pendidikan_id = $mtingkat;
+                if($model->save()){
+                    $success = true;
+                }else{
+                    $success = false;
+                    break;
+                }
+            }
+        }else{
+            $model = new TingkatPendidikanPengajar();
+            $model->pengajar_id = $pengajar->id;
+            $model->tingkat_pendidikan_id = substr($request->input('tingkat_pendidikan'), 0,-1);
+            if($model->save()){
+                $success = true;
+            }else{
+                $success = false;
+            }
+        }
+
+
+        $mapel = explode(';', substr($request->input('mapel'), 0,-1));
+        if (count($tingkat_pendidikan)>0){
+            foreach ($mapel as $key=>$mMapel){
+                $model = new MapelPengajar();
+                $model->pengajar_id = $pengajar->id;
+                $model->mapel_id = $mMapel;
+                if($model->save()){
+                    $success = true;
+                }else{
+                    $success = false;
+                    break;
+                }
+            }
+        }else{
+            $model = new MapelPengajar();
+            $model->pengajar_id = $pengajar->id;
+            $model->mapel_id = substr($request->input('mapel'), 0,-1);
+            if($model->save()){
+                $success = true;
+            }else{
+                $success = false;
+            }
+        }
+
+        if($success){
+            return response()->json(['status'=>1]);
         }else{
             return response()->json(['status'=>0]);
         }

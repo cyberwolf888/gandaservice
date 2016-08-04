@@ -27,6 +27,14 @@ $app->post('/cabang',['as' => 'cabang', 'uses' => 'CabangController@showAll']);
 
 $app->get('/activation/{token}',['as'=>'activation', 'uses' => 'UserController@activation']);
 
+$app->post('/tingkatpendidikan', ['as'=>'tingkatpendidikan', 'uses' => 'TingkatController@showAll']);
+
+$app->post('/mapel', ['as'=>'mapel', 'uses' => 'MapelController@showAll']);
+
+$app->post('/cekProfilePengajar', ['as'=>'mapel', 'uses' => 'UserController@cekProfilePengajar']);
+
+$app->post('/complatingProfile', ['as'=>'mapel', 'uses' => 'UserController@complatingProfile']);
+
 $app->get('/testmail', function (){
 // the message
     $msg = "Klik tautan berikut untuk mengaktifkan account anda: \nhttp://gandaedukasi.esy.es/android/active/d76b4fe16e602bba95a7b43a838c37f1";
