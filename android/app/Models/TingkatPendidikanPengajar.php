@@ -13,4 +13,8 @@ class TingkatPendidikanPengajar extends Model
      */
     protected $table = 'tb_tingkat_pendidikan_pengajar';
 
+    public function tingkat_pendidikan()
+    {
+        return $this->belongsTo('App\Models\TingkatPendidikan','tingkat_pendidikan_id');
+    }
 }

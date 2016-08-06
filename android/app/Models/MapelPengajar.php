@@ -13,4 +13,8 @@ class MapelPengajar extends Model
      */
     protected $table = 'tb_mapel_pengajar';
 
+    public function mapel()
+    {
+        return $this->belongsTo('App\Models\Mapel','mapel_id');
+    }
 }

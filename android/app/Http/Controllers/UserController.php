@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cabang;
+use App\Models\Mapel;
 use App\Models\MapelPengajar;
 use App\Models\Pengajar;
 use App\Models\TingkatPendidikan;
@@ -186,7 +187,47 @@ class UserController extends Controller
                 return response()->json(['status'=>0]);
             }
         }elseif ($type == 'pengajar'){
-            //TODO proses get profile pengajar
+            $data = array();
+            $data['label_tingkat_pendidikan'] = "";
+            $data['id_tingkat_pendidikan'] = "";
+            $data['label_mapel'] = "";
+            $data['id_mapel'] = "";
+
+            $pengajar = $user->pengajar;
+            $tingkat_pengajar = TingkatPendidikanPengajar::with('tingkat_pendidikan')->where('pengajar_id',$pengajar->id)->get();
+            $mapel_pengajar = MapelPengajar::with('mapel.tingkat')->where('pengajar_id',$pengajar->id)->get();
+
+            foreach ($tingkat_pengajar as $row_tingkat_mengajar){
+                $data['label_tingkat_pendidikan'].= $row_tingkat_mengajar->tingkat_pendidikan->nama.", ";
+                $data['id_tingkat_pendidikan'].= $row_tingkat_mengajar->tingkat_pendidikan_id.";";
+            }
+            foreach ($mapel_pengajar as $row_mapel_pengajar){
+                $data['label_mapel'].= $row_mapel_pengajar->mapel->nama." - ".$row_mapel_pengajar->mapel->tingkat->nama.", ";
+                $data['id_mapel'].= $row_mapel_pengajar->mapel_id.";";
+            }
+            $data['label_tingkat_pendidikan'] = substr($data['label_tingkat_pendidikan'], 0, -2);
+            $data['label_mapel'] = substr($data['label_mapel'], 0, -2);
+
+            $data['fullname'] = $pengajar->fullname;
+            $data['email'] = $user->email;
+            $data['pengajar_cp'] = $pengajar->pengajar_cp;
+            $data['pengajar_pendidikan'] = $pengajar->pengajar_pendidikan;
+            $data['pengajar_alamat'] = $pengajar->pengajar_alamat;
+            $data['zona_id'] = $pengajar->zona_id;
+            $data['zona'] = $pengajar->cabang->nama;
+            $data['photo'] = $pengajar->photo;
+
+            return response()->json(['status'=>1,'data'=>$data]);
+        }
+    }
+
+    public function editProfilePengajar(Request $request)
+    {
+        $user_id = $request->input('user_id');
+        $user = User::find($user_id);
+        if($user_id && count($user)){
+            $pengajar = $user->pengajar;
+            dd($pengajar);
         }
     }
 

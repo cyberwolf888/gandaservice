@@ -15,4 +15,8 @@ class Pengajar extends Model
     const NOT_AVALAIBLE = '400';
     protected $table = 'tb_pengajar';
 
+    public function cabang()
+    {
+        return $this->belongsTo('App\Models\Cabang','zona_id');
+    }
 }
