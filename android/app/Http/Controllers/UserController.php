@@ -227,7 +227,31 @@ class UserController extends Controller
         $user = User::find($user_id);
         if($user_id && count($user)){
             $pengajar = $user->pengajar;
-            dd($pengajar);
+            if ($request->hasFile('photo')) {
+                $photoFolder = base_path('../images/photo/pengajar');
+                $image = $request->file('photo');
+                $ext = $image->getClientOriginalExtension();
+                if($pengajar->photo != null){
+                    if(is_file($photoFolder."/".$pengajar->photo)){
+                        unlink($photoFolder."/".$pengajar->photo);
+                    }
+                }
+                $filename = $pengajar->id.str_random(10).".".$ext;
+                if($image->move($photoFolder, $filename)){
+                    $pengajar->photo = $filename;
+                }
+            }
+            $pengajar->fullname = $request->input('name');
+            $pengajar->pengajar_cp = $request->input('phone');
+            $pengajar->pengajar_pendidikan = $request->input('pendidikan');
+            $pengajar->pengajar_alamat = $request->input('alamat');
+            $user->email = $request->input('email');
+            if($pengajar->save()){
+                $user->save();
+                return response()->json(['status'=>1]);
+            }
+        }else{
+            return response()->json(['status'=>0]);
         }
     }
 

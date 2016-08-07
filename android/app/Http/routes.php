@@ -31,9 +31,11 @@ $app->post('/tingkatpendidikan', ['as'=>'tingkatpendidikan', 'uses' => 'TingkatC
 
 $app->post('/mapel', ['as'=>'mapel', 'uses' => 'MapelController@showAll']);
 
-$app->post('/cekProfilePengajar', ['as'=>'mapel', 'uses' => 'UserController@cekProfilePengajar']);
+$app->post('/cekProfilePengajar', ['as'=>'cekprofilepengajar', 'uses' => 'UserController@cekProfilePengajar']);
 
-$app->post('/complatingProfile', ['as'=>'mapel', 'uses' => 'UserController@complatingProfile']);
+$app->post('/editProfilePengajar', ['as'=>'editprofilepengajar', 'uses' => 'UserController@editprofilepengajar']);
+
+$app->post('/complatingProfile', ['as'=>'compaltingprofile', 'uses' => 'UserController@complatingProfile']);
 
 $app->get('/testmail', function (){
 // the message
