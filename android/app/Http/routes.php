@@ -19,6 +19,8 @@ $app->post('/login',['as' => 'login', 'uses' => 'UserController@login']);
 
 $app->post('/register/pengajar',['as' => 'registerpengajar', 'uses' => 'UserController@registerPengajar']);
 
+$app->post('/register/siswa',['as' => 'registersiswa', 'uses' => 'UserController@registerSiswa']);
+
 $app->post('/article',['as' => 'article', 'uses' => 'ArticleController@showAll']);
 
 $app->post('/getProfile/{type}', ['as' => 'get_profile', 'uses' => 'UserController@getProfle']);

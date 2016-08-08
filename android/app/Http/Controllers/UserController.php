@@ -6,6 +6,7 @@ use App\Models\Cabang;
 use App\Models\Mapel;
 use App\Models\MapelPengajar;
 use App\Models\Pengajar;
+use App\Models\Siswa;
 use App\Models\TingkatPendidikan;
 use App\Models\TingkatPendidikanPengajar;
 use App\User;
@@ -27,9 +28,11 @@ class UserController extends Controller
     {
         $email = $request->input('email');
         $password = $request->input('password');
+        $type = $request->input('type');
 
         $user = User::where('email',$email)
             ->where('password',md5($password))
+            ->where('type',$type)
             ->where('status',1)
             ->first();
         if($user && count($user)>0){
@@ -64,7 +67,7 @@ class UserController extends Controller
             if($model->save()){
                 $mPengajar->user_id = $model->id;
                 $mPengajar->zona_id = $cabang->id;
-                $mPengajar->fullname = $request->input('nama');
+                $mPengajar->fullname = ucfirst($request->input('nama'));
                 $mPengajar->pengajar_alamat = $request->input('alamat');
                 $mPengajar->pengajar_cp = $request->input('telp');
                 $mPengajar->pengajar_pendidikan = $request->input('edukasi');
@@ -80,6 +83,44 @@ class UserController extends Controller
             return response()->json(['status'=>0]);
         }
 
+    }
+
+    public function registerSiswa(Request $request)
+    {
+        $user = User::where('email',$request->input('email'))->count();
+        $siswa = Siswa::where('siswa_cp',$request->input('telp'))->count();
+        if($user == 0 && $siswa == 0){
+            $cabang = Cabang::where('nama',$request->input('zona'))->first();
+            $tingkat = TingkatPendidikan::where('nama',$request->input('tingkat'))->first();
+            $model = new User();
+            $mSiswa = new Siswa();
+
+            $model->email = $request->input('email');
+            $model->password = md5($request->input('password'));
+            $model->status = 0;
+            $model->type = User::SISWA;
+            $model->token = md5($request->input('email'));
+
+            if($model->save()){
+                $mSiswa->user_id = $model->id;
+                $mSiswa->zona_id = $cabang->id;
+                $mSiswa->fullname = ucfirst($request->input('nama'));
+                $mSiswa->alamat = $request->input('alamat');
+                $mSiswa->tempat_lahir = ucfirst($request->input('tempat_lahir'));
+                $mSiswa->tgl_lahir = $request->input('tgl_lahir');
+                $mSiswa->siswa_cp = $request->input('telp');
+                $mSiswa->siswa_wali = ucfirst($request->input('wali'));
+                $mSiswa->siswa_pendidikan = $tingkat->id;
+                if($mSiswa->save()){
+                    $msg = "Klik tautan berikut untuk mengaktifkan account anda: \n".route('activation',['token'=>$model->token]);
+                    $msg = wordwrap($msg,70);
+                    mail($request->input('email'),"Ganda Edukasi - Account Activation",$msg);
+                    return response()->json(['status'=>1]);
+                }
+            }
+        }else{
+            return response()->json(['status'=>0]);
+        }
     }
 
     public function cekProfilePengajar(Request $request)
