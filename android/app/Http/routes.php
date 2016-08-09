@@ -37,6 +37,8 @@ $app->post('/cekProfilePengajar', ['as'=>'cekprofilepengajar', 'uses' => 'UserCo
 
 $app->post('/editProfilePengajar', ['as'=>'editprofilepengajar', 'uses' => 'UserController@editprofilepengajar']);
 
+$app->post('/editProfileSiswa', ['as'=>'editprofilepengajar', 'uses' => 'UserController@editProfileSiswa']);
+
 $app->post('/complatingProfile', ['as'=>'compaltingprofile', 'uses' => 'UserController@complatingProfile']);
 
 $app->get('/testmail', function (){

@@ -223,6 +223,10 @@ class UserController extends Controller
             if($user && count($user)>0){
                 $siswa = $user->siswa;
                 $siswa['email'] = $user->email;
+                $tingkat = TingkatPendidikan::find($siswa->siswa_pendidikan);
+                $siswa['tingkat_pendidikan'] = $tingkat->nama;
+                $cabang = Cabang::find($siswa->zona_id);
+                $siswa['cabang'] = $cabang->nama;
                 return response()->json(['status'=>1,'data'=>$siswa]);
             }else{
                 return response()->json(['status'=>0]);
@@ -288,6 +292,42 @@ class UserController extends Controller
             $pengajar->pengajar_alamat = $request->input('alamat');
             $user->email = $request->input('email');
             if($pengajar->save()){
+                $user->save();
+                return response()->json(['status'=>1]);
+            }
+        }else{
+            return response()->json(['status'=>0]);
+        }
+    }
+
+    public function editProfileSiswa(Request $request)
+    {
+        $user_id = $request->input('user_id');
+        $user = User::find($user_id);
+        if($user_id && count($user)){
+            $siswa = $user->siswa;
+            if ($request->hasFile('photo')) {
+                $photoFolder = base_path('../images/photo/siswa');
+                $image = $request->file('photo');
+                $ext = $image->getClientOriginalExtension();
+                if($siswa->photo != null){
+                    if(is_file($photoFolder."/".$siswa->photo)){
+                        unlink($photoFolder."/".$siswa->photo);
+                    }
+                }
+                $filename = $siswa->id.str_random(10).".".$ext;
+                if($image->move($photoFolder, $filename)){
+                    $siswa->photo = $filename;
+                }
+            }
+            $siswa->fullname = $request->input('nama');
+            $siswa->alamat = $request->input('alamat');
+            $siswa->tempat_lahir = $request->input('tempat_lahir');
+            $siswa->tgl_lahir = $request->input('tgl_lahir');
+            $siswa->siswa_cp = $request->input('phone');
+            $siswa->siswa_wali = $request->input('wali');
+            $user->email = $request->input('email');
+            if($siswa->save()){
                 $user->save();
                 return response()->json(['status'=>1]);
             }
