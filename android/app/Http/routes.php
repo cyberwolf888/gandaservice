@@ -41,11 +41,6 @@ $app->post('/editProfileSiswa', ['as'=>'editprofilepengajar', 'uses' => 'UserCon
 
 $app->post('/complatingProfile', ['as'=>'compaltingprofile', 'uses' => 'UserController@complatingProfile']);
 
-$app->get('/testmail', function (){
-// the message
-    $msg = "Klik tautan berikut untuk mengaktifkan account anda: \nhttp://gandaedukasi.esy.es/android/active/d76b4fe16e602bba95a7b43a838c37f1";
-// use wordwrap() if lines are longer than 70 characters
-    $msg = wordwrap($msg,70);
-// send email
-    mail("wijaya.imd@gmail.com","Ganda Edukasi - Account Activation",$msg);
-});
+$app->post('/getMapelPengajar', ['as'=>'getMapelPengajar', 'uses' => 'MapelController@getMapelPengajar']);
+
+$app->post('/tambahJadwalPengajar', ['as'=>'getMapelPengajar', 'uses' => 'JadwalController@tambahJadwalPengajar']);

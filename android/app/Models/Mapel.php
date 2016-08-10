@@ -18,8 +18,4 @@ class Mapel extends Model
         return $this->belongsTo('App\Models\TingkatPendidikan','tingkat_pendidikan');
     }
 
-    public function bedebah(){
-        return "asdasdasdasd";
-    }
-
 }

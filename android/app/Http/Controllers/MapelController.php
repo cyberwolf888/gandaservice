@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Cabang;
 use App\Models\Mapel;
+use App\Models\MapelPengajar;
 use App\Models\TingkatPendidikan;
+use App\User;
 use Illuminate\Http\Request;
 
 class MapelController extends Controller
@@ -43,7 +45,23 @@ class MapelController extends Controller
         }else{
             return response()->json(['status'=>0]);
         }
+    }
 
+    public function getMapelPengajar(Request $request)
+    {
+        $user_id = $request->input('user_id');
+        $user = User::find($user_id);
+        $pengajar = $user->pengajar;
+        $mapel_pengajar = MapelPengajar::where('pengajar_id',$pengajar->id)->with('mapel.tingkat')->get();
+        $data = array();
+        if(count($mapel_pengajar)>0){
+            foreach ($mapel_pengajar as $mapel){
+                array_push($data, ['id'=>$mapel->mapel_id,'label'=>$mapel->mapel->nama . " - " . $mapel->mapel->tingkat->nama]);
+            }
+            return response()->json(['status'=>1,'data'=>$data]);
+        }else{
+            return response()->json(['status'=>0]);
+        }
     }
 
     //
