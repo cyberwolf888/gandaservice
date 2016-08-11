@@ -43,4 +43,8 @@ $app->post('/complatingProfile', ['as'=>'compaltingprofile', 'uses' => 'UserCont
 
 $app->post('/getMapelPengajar', ['as'=>'getMapelPengajar', 'uses' => 'MapelController@getMapelPengajar']);
 
-$app->post('/tambahJadwalPengajar', ['as'=>'getMapelPengajar', 'uses' => 'JadwalController@tambahJadwalPengajar']);
+$app->post('/tambahJadwalPengajar', ['as'=>'tambahJadwalPengajar', 'uses' => 'JadwalController@tambahJadwalPengajar']);
+
+$app->post('/getJadwalPengajar', ['as'=>'getJadwalPengajar', 'uses' => 'JadwalController@getJadwalPengajar']);
+
+$app->post('/deleteJadwalPengajar', ['as'=>'deleteJadwalPengajar', 'uses' => 'JadwalController@deleteJadwalPengajar']);

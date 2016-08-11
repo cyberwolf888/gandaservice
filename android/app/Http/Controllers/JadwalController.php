@@ -45,4 +45,36 @@ class JadwalController extends Controller
         }
     }
 
+    public function getJadwalPengajar(Request $request)
+    {
+        $hari = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+        $user_id = $request->input('user_id');
+        $user = User::find($user_id);
+        $pengajar = $user->pengajar;
+        $jadwal = JadwalPengajar::where('pengajar_id',$pengajar->id)->with(['mapel.tingkat','cabang'])->get();
+        if(count($jadwal)>0){
+            $data = array();
+            foreach ($jadwal as $row){
+                $row['label_mapel'] = $row->mapel->nama." - ".$row->mapel->tingkat->nama;
+                $row['label_cabang'] = $row->cabang->nama;
+                $row['label_hari'] = $hari[$row->hari];
+                array_push($data, $row);
+            }
+            return response()->json(['status'=>1,'data'=>$data]);
+        }else{
+            return response()->json(['status'=>0]);
+        }
+    }
+
+    public function deleteJadwalPengajar(Request $request)
+    {
+        $jadwal_id = $request->input('jadwal_id');
+        $model = JadwalPengajar::find($jadwal_id);
+        if($model->delete()){
+            return response()->json(['status'=>1]);
+        }else{
+            return response()->json(['status'=>0]);
+        }
+    }
+
 }
