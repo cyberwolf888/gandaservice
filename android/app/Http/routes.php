@@ -49,6 +49,8 @@ $app->post('/getJadwalPengajar', ['as'=>'getJadwalPengajar', 'uses' => 'JadwalCo
 
 $app->post('/deleteJadwalPengajar', ['as'=>'deleteJadwalPengajar', 'uses' => 'JadwalController@deleteJadwalPengajar']);
 
+$app->post('/activeJadwalPengajar', ['as'=>'activeJadwalPengajar', 'uses' => 'JadwalController@activeJadwalPengajar']);
+
 $app->post('/getMapelPelajar', ['as'=>'getMapelPelajar', 'uses' => 'MapelController@getMapelPelajar']);
 
 $app->post('/getJadwalByMapel', ['as'=>'getJadwalByMapel', 'uses' => 'JadwalController@getJadwalByMapel']);

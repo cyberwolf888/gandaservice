@@ -38,6 +38,7 @@ class JadwalController extends Controller
         $model->hari = $hari[$request->input('hari')];
         $model->jam_mulai = $request->input('waktu_mulai');
         $model->jam_selesai = $request->input('waktu_selesai');
+        $model->status = $model::ACTIVE;
         if($model->save()){
             return response()->json(['status'=>1]);
         }else{
@@ -70,7 +71,19 @@ class JadwalController extends Controller
     {
         $jadwal_id = $request->input('jadwal_id');
         $model = JadwalPengajar::find($jadwal_id);
-        if($model->delete()){
+        $model->status = JadwalPengajar::DEACTIVE;
+        if($model->save()){
+            return response()->json(['status'=>1]);
+        }else{
+            return response()->json(['status'=>0]);
+        }
+    }
+    public function activeJadwalPengajar(Request $request)
+    {
+        $jadwal_id = $request->input('jadwal_id');
+        $model = JadwalPengajar::find($jadwal_id);
+        $model->status = JadwalPengajar::ACTIVE;
+        if($model->save()){
             return response()->json(['status'=>1]);
         }else{
             return response()->json(['status'=>0]);
@@ -84,7 +97,11 @@ class JadwalController extends Controller
         $mapel_id = $request->input('mapel_id');
         $user = User::find($user_id);
         $siswa = $user->siswa;
-        $jadwal = JadwalPengajar::where('mapel_id',$mapel_id)->where('zona_id',$siswa->zona_id)->with(['mapel.tingkat','cabang','pengajar'])->get();
+        $jadwal = JadwalPengajar::where('mapel_id',$mapel_id)
+            ->where('zona_id',$siswa->zona_id)
+            ->where('status',JadwalPengajar::ACTIVE)
+            ->with(['mapel.tingkat','cabang','pengajar'])
+            ->get();
         if(count($jadwal)>0){
             $data = array();
             $i = 0;

@@ -11,6 +11,9 @@ class JadwalPengajar extends Model
      *
      * @var string
      */
+    const ACTIVE = 1;
+    const DEACTIVE = 0;
+
     protected $table = 'tb_jadwal_pengajar';
 
     public function mapel()
