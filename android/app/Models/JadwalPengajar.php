@@ -22,4 +22,9 @@ class JadwalPengajar extends Model
     {
         return $this->belongsTo('App\Models\Cabang','zona_id');
     }
+
+    public function pengajar()
+    {
+        return $this->belongsTo('App\Models\Pengajar','pengajar_id');
+    }
 }

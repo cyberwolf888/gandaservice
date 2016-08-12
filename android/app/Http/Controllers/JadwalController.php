@@ -77,4 +77,37 @@ class JadwalController extends Controller
         }
     }
 
+    public function getJadwalByMapel(Request $request)
+    {
+        $hari = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+        $user_id = $request->input('user_id');
+        $mapel_id = $request->input('mapel_id');
+        $user = User::find($user_id);
+        $siswa = $user->siswa;
+        $jadwal = JadwalPengajar::where('mapel_id',$mapel_id)->where('zona_id',$siswa->zona_id)->with(['mapel.tingkat','cabang','pengajar'])->get();
+        if(count($jadwal)>0){
+            $data = array();
+            $i = 0;
+            foreach ($jadwal as $row){
+                $mData = [
+                    'jadwal_id'=>$row->id,
+                    'pengajar_id'=>$row->pengajar->id,
+                    'mapel_id'=>$row->mapel_id,
+                    'nama_pengajar'=>$row->pengajar->fullname,
+                    'label_mapel'=>$row->mapel->nama." - ".$row->mapel->tingkat->nama,
+                    'label_hari'=>$hari[$row->hari],
+                    'waktu_mulai'=>$row->jam_mulai,
+                    'waktu_selesai'=>$row->jam_selesai,
+                    'label_tempat'=>$row->cabang->alamat."(".$row->cabang->nama.")",
+                    'photo'=>$row->pengajar->photo
+                ];
+                $data[$i] = $mData;
+                $i++;
+            }
+            return response()->json(['status'=>1,'data'=>$data]);
+        }else{
+            return response()->json(['status'=>0]);
+        }
+    }
+
 }

@@ -64,5 +64,23 @@ class MapelController extends Controller
         }
     }
 
+    public function getMapelPelajar(Request $request)
+    {
+        $user_id = $request->input('user_id');
+        $user = User::find($user_id);
+        $siswa = $user->siswa;
+        $mapel = Mapel::where('tingkat_pendidikan',$siswa->siswa_pendidikan)->with('tingkat')->get();
+        if(count($mapel)>0){
+            $data = array();
+            foreach ($mapel as $row){
+                $row['label_mapel'] = $row->nama." - ".$row->tingkat->nama;
+                array_push($data,$row);
+            }
+            return response()->json(['status'=>1,'data'=>$data]);
+        }else{
+            return response()->json(['status'=>0]);
+        }
+    }
+
     //
 }
