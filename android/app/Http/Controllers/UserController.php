@@ -90,36 +90,84 @@ class UserController extends Controller
         $user = User::where('email',$request->input('email'))->count();
         $siswa = Siswa::where('siswa_cp',$request->input('telp'))->count();
         if($user == 0 && $siswa == 0){
-            $cabang = Cabang::where('nama',$request->input('zona'))->first();
-            $tingkat = TingkatPendidikan::where('nama',$request->input('tingkat'))->first();
-            $model = new User();
-            $mSiswa = new Siswa();
+            //cek lat & long siswa
+            $alamat = $this->geocoding_alamat($request->input('alamat'));
+            if($alamat['status']=="OK"){
+                $latitude = $alamat['results'][0]['geometry']['location']['lat'];
+                $longitude = $alamat['results'][0]['geometry']['location']['lng'];
+                $cabang = $this->cariCabangTerdekat($latitude,$longitude);
+                if($cabang==null){
+                    return response()->json(['status'=>0,'error'=>'Tidak ada cabang yang tersedia unutk anda.']);
+                }else{
+                    $tingkat = TingkatPendidikan::where('nama',$request->input('tingkat'))->first();
+                    $model = new User();
+                    $mSiswa = new Siswa();
 
-            $model->email = $request->input('email');
-            $model->password = md5($request->input('password'));
-            $model->status = 0;
-            $model->type = User::SISWA;
-            $model->token = md5($request->input('email'));
+                    $model->email = $request->input('email');
+                    $model->password = md5($request->input('password'));
+                    $model->status = 0;
+                    $model->type = User::SISWA;
+                    $model->token = md5($request->input('email'));
 
-            if($model->save()){
-                $mSiswa->user_id = $model->id;
-                $mSiswa->zona_id = $cabang->id;
-                $mSiswa->fullname = ucfirst($request->input('nama'));
-                $mSiswa->alamat = $request->input('alamat');
-                $mSiswa->tempat_lahir = ucfirst($request->input('tempat_lahir'));
-                $mSiswa->tgl_lahir = $request->input('tgl_lahir');
-                $mSiswa->siswa_cp = $request->input('telp');
-                $mSiswa->siswa_wali = ucfirst($request->input('wali'));
-                $mSiswa->siswa_pendidikan = $tingkat->id;
-                if($mSiswa->save()){
-                    $msg = "Klik tautan berikut untuk mengaktifkan account anda: \n".route('activation',['token'=>$model->token]);
-                    $msg = wordwrap($msg,70);
-                    mail($request->input('email'),"Ganda Edukasi - Account Activation",$msg);
-                    return response()->json(['status'=>1]);
+                    if($model->save()){
+                        $mSiswa->user_id = $model->id;
+                        $mSiswa->zona_id = $cabang->id;
+                        $mSiswa->latitude = $latitude;
+                        $mSiswa->longitude = $longitude;
+                        $mSiswa->fullname = ucfirst($request->input('nama'));
+                        $mSiswa->alamat = $request->input('alamat');
+                        $mSiswa->tempat_lahir = ucfirst($request->input('tempat_lahir'));
+                        $mSiswa->tgl_lahir = $request->input('tgl_lahir');
+                        $mSiswa->siswa_cp = $request->input('telp');
+                        $mSiswa->siswa_wali = ucfirst($request->input('wali'));
+                        $mSiswa->siswa_pendidikan = $tingkat->id;
+                        if($mSiswa->save()){
+                            $msg = "Klik tautan berikut untuk mengaktifkan account anda: \n".route('activation',['token'=>$model->token]);
+                            $msg = wordwrap($msg,70);
+                            mail($request->input('email'),"Ganda Edukasi - Account Activation",$msg);
+                            return response()->json(['status'=>1]);
+                        }
+                    }
                 }
+            }else{
+                return response()->json(['status'=>0,'error'=>'Alamat anda tidak ditemukan.']);
             }
         }else{
-            return response()->json(['status'=>0]);
+            return response()->json(['status'=>0,'error'=>'Email atau No. Telp telah digunakan.']);
+        }
+    }
+    private function geocoding_alamat($alamat)
+    {
+        $key = env("GEOCODE_KEY");
+        $alamat = str_replace(' ', '+', $alamat);
+        $url = "https://maps.googleapis.com/maps/api/geocode/json?address=$alamat&region=id&key=$key";
+        return json_decode(file_get_contents($url),true);
+    }
+
+    private function cariCabangTerdekat($lat, $lng)
+    {
+        $key = env("DISTANCE_MATRIX_KEY");
+        $cabang = Cabang::all();
+        $destination = "";
+        foreach ($cabang as $row){
+            $destination.=$row->latitude.",".$row->logitude."|";
+        }
+        $destination = substr($destination, 0,-1);
+        $url = "https://maps.googleapis.com/maps/api/distancematrix/json?origins=$lat,$lng&destinations=$destination&mode=driving&language=id&key=$key";
+        $result = json_decode(file_get_contents($url),true);
+        if($result['status']=="OK"){
+            $elements =  $result['rows'][0]['elements'];
+            $min = 9999999999;
+            $value = array();
+            foreach ($elements as $key=>$row){
+                if($row['distance']['value']<$min){
+                    $value = $cabang[$key];
+                    $min = $row['distance']['value'];
+                }
+            }
+            return $value;
+        }else{
+            return null;
         }
     }
 
