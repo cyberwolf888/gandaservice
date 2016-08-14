@@ -55,18 +55,18 @@ class UserController extends Controller
         $pengajar = Pengajar::where('pengajar_cp',$request->input('telp'))->count();
 
         if($user == 0 && $pengajar == 0){
-            $cabang = Cabang::where('nama',$request->input('zona'))->first();
+            //$cabang = Cabang::where('nama',$request->input('zona'))->first();
             $model = new User();
             $mPengajar = new Pengajar();
 
             $model->email = $request->input('email');
             $model->password = md5($request->input('password'));
-            $model->status = 0;
+            $model->status = 3;
             $model->type = User::PENGAJAR;
             $model->token = md5($request->input('email'));
             if($model->save()){
                 $mPengajar->user_id = $model->id;
-                $mPengajar->zona_id = $cabang->id;
+                //$mPengajar->zona_id = $cabang->id;
                 $mPengajar->fullname = ucfirst($request->input('nama'));
                 $mPengajar->pengajar_alamat = $request->input('alamat');
                 $mPengajar->pengajar_cp = $request->input('telp');
@@ -207,10 +207,16 @@ class UserController extends Controller
     {
         $user = User::where('token',$token)->first();
         if($user && count($user)>0){
-            $user->status = 1;
+            if($user->type == User::PENGAJAR){
+                $user->status = 0;
+                $message = "Email anda berhasil diverifikasi. Mohon tunggu konfirmasi dari support kami untuk meninjau account anda.";
+            }else{
+                $user->status = 1;
+                $message = "Account anda telah aktif. Silahkan login melalui aplikasi.";
+            }
             $user->token = null;
             if($user->save()){
-                return "Account anda telah aktif!";
+                return $message;
             }
         }
     }
