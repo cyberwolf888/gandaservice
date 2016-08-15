@@ -17,4 +17,9 @@ class MapelPengajar extends Model
     {
         return $this->belongsTo('App\Models\Mapel','mapel_id');
     }
+
+    public function pengajar()
+    {
+        return $this->belongsTo('App\Models\Pengajar','pengajar_id');
+    }
 }

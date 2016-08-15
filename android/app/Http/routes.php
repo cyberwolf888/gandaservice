@@ -54,3 +54,5 @@ $app->post('/activeJadwalPengajar', ['as'=>'activeJadwalPengajar', 'uses' => 'Ja
 $app->post('/getMapelPelajar', ['as'=>'getMapelPelajar', 'uses' => 'MapelController@getMapelPelajar']);
 
 $app->post('/getJadwalByMapel', ['as'=>'getJadwalByMapel', 'uses' => 'JadwalController@getJadwalByMapel']);
+
+$app->post('/getPengajar', ['as'=>'getPengajar', 'uses' => 'JadwalController@getPengajar']);

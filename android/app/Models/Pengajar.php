@@ -19,4 +19,8 @@ class Pengajar extends Model
     {
         return $this->belongsTo('App\Models\Cabang','zona_id');
     }
+    public function user()
+    {
+        return $this->belongsTo('App\User','user_id');
+    }
 }
