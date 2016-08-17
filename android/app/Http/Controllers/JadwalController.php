@@ -10,12 +10,17 @@ namespace App\Http\Controllers;
 
 
 use App\Models\Cabang;
+use App\Models\DetailJadwal;
+use App\Models\Jadwal;
 use App\Models\JadwalPengajar;
+use App\Models\Mapel;
 use App\Models\MapelPengajar;
+use App\Models\Paket;
 use App\Models\Pengajar;
 use App\Models\TingkatPendidikanPengajar;
 use App\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class JadwalController extends Controller
 {
@@ -105,6 +110,13 @@ class JadwalController extends Controller
             $data = array();
             $i = 0;
             foreach ($mapel_pengajar as $row){
+                $cekJadwal = Jadwal::whereRaw(DB::raw("pengajar_id = '".$row->pengajar->id."' AND 
+                siswa_id = '".$siswa->id."' AND 
+                mapel_id = '".$mapel_id."' AND 
+                (status='1' OR status='3')"))->count();
+                if($cekJadwal>0){
+                    continue;
+                }
                 if($row->pengajar->user->status == 1 && $row->pengajar->zona_id == $siswa->zona_id){
                     $cabang = Cabang::find($row->pengajar->zona_id);
                     $data[$i]['pengajar_id'] = $row->pengajar->id;
@@ -146,6 +158,87 @@ class JadwalController extends Controller
             return response()->json(['status'=>1,'data'=>$pengajar]);
         }else{
             return response()->json(['status'=>0]);
+        }
+    }
+
+    public function getPaket(Request $request)
+    {
+        $paket = Paket::with('tarif')->get();
+        if(count($paket)>0){
+            $data = array();
+            $i = 0;
+            foreach ($paket as $row){
+                $data[$i]['paket_id'] = $row->id;
+                $data[$i]['tarif_id'] = $row->tarif_id;
+                $data[$i]['nama'] = $row->nama;
+                $data[$i]['jumlah_pertemuan'] = $row->jumlah_pertemuan;
+                $data[$i]['durasi'] = $row->durasi;
+                $data[$i]['harga'] = $row->tarif->harga;
+                $data[$i]['label_harga'] = number_format($row->tarif->harga, 0, ',', '.');
+                $i++;
+            }
+            return response()->json(['status'=>1,'data'=>$data]);
+        }else{
+            return response()->json(['status'=>0]);
+        }
+    }
+
+    public function buatJadwal(Request $request)
+    {
+        $paket = Paket::find($request->input('paket_id'));
+        $user = User::find($request->input('user_id'));
+        $mapel = Mapel::find($request->input('mapel_id'));
+        $siswa = $user->siswa;
+        $pengajar = Pengajar::find($request->input('pengajar_id'));
+        $jadwal = new Jadwal();
+
+        $jadwal->pengajar_id = $pengajar->id;
+        $jadwal->siswa_id = $siswa->id;
+        $jadwal->mapel_id = $mapel->id;
+        $jadwal->paket_id = $paket->id;
+        $jadwal->jadwal_tempat = $pengajar->zona_id;
+        $jadwal->status = 3;
+        if($jadwal->save()){
+            $result = true;
+            for($i=0; $i<$paket->jumlah_pertemuan; $i++){
+                $timestamp = strtotime($request->input("waktu_pertemuan".$i)) + 60*90;
+                $waktu_selesai = date('H:i', $timestamp);
+                if($i>0){
+                    $waktu_pertemuan = date("Y-m-d H:i:s",strtotime($request->input("tgl_pertemuan" . $i)));
+                    $x = $i-1;
+                    $old_time = date("Y-m-d H:i:s",strtotime($request->input("tgl_pertemuan" . $x)));
+                    if($old_time>=$waktu_pertemuan){
+                        $result = false;
+                        $xi = $i+1;
+                        $error = "Tanggal pertemuan ".$xi." salah!";
+                        break;
+                    }
+                }
+                $detail_jadwal = new DetailJadwal();
+                $detail_jadwal->jadwal_id = $jadwal->id;
+                $detail_jadwal->pertemuan = $i+1;
+                $detail_jadwal->tgl_pertemuan = date("Y-m-d",strtotime($request->input("tgl_pertemuan" . $i)));
+                $detail_jadwal->waktu_mulai = $request->input("waktu_pertemuan".$i);
+                $detail_jadwal->waktu_selesai = $waktu_selesai;
+                $detail_jadwal->tempat = $jadwal->jadwal_tempat;
+                if($detail_jadwal->save()){
+                    $result = true;
+                }else{
+                    $result = false;
+                    $error = "Gagal menyimpan jadwal.";
+                    break;
+                }
+            }
+            if($result){
+                return response()->json(['status'=>1]);
+            }else{
+                DetailJadwal::where('jadwal_id', $jadwal->id)->delete();
+                $jadwal->delete();
+
+                return response()->json(['status'=>0,'error'=>$error]);
+            }
+        }else{
+            return response()->json(['status'=>0,'error'=>'Gagal menyimpan jadwal.']);
         }
     }
 
