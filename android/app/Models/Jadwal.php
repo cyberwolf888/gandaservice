@@ -18,4 +18,19 @@ class Jadwal extends Model
         return $this->hasMany('App\Models\DetailJadwal','jadwal_id');
     }
 
+    public function siswa()
+    {
+        return $this->belongsTo('App\Models\Siswa', 'siswa_id');
+    }
+
+    public function mapel()
+    {
+        return $this->belongsTo('App\Models\Mapel','mapel_id');
+    }
+
+    public function paket()
+    {
+        return $this->belongsTo('App\Models\Paket','paket_id');
+    }
+
 }

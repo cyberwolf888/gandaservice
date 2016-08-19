@@ -60,3 +60,11 @@ $app->post('/getPengajar', ['as'=>'getPengajar', 'uses' => 'JadwalController@get
 $app->post('/getPaket', ['as'=>'getPaket', 'uses' => 'JadwalController@getPaket']);
 
 $app->post('/buatJadwal', ['as'=>'buatJadwal', 'uses' => 'JadwalController@buatJadwal']);
+
+$app->post('/getRequestSiswa', ['as'=>'getRequestSiswa', 'uses' => 'JadwalController@getRequestSiswa']);
+
+$app->post('/getDetailRequestSiswa', ['as'=>'getDetailRequestSiswa', 'uses' => 'JadwalController@getDetailRequestSiswa']);
+
+$app->post('/tolakJadwal', ['as'=>'tolakJadwal', 'uses' => 'JadwalController@tolakJadwal']);
+
+$app->post('/terimaJadwal', ['as'=>'terimaJadwal', 'uses' => 'JadwalController@terimaJadwal']);
