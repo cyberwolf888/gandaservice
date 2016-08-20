@@ -11,6 +11,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Cabang;
 use App\Models\DetailJadwal;
+use App\Models\History;
 use App\Models\Jadwal;
 use App\Models\JadwalPengajar;
 use App\Models\Mapel;
@@ -352,7 +353,8 @@ class JadwalController extends Controller
         $waktu_mulai = date('H:i:s', $timestamp1);
         $waktu_selesai = date('H:i:s', $timestamp2);
 
-        $model = DB::select('SELECT dj.*,j.status, s.fullname  
+        $model = DB::select('SELECT 
+                                    dj.*,j.status, s.fullname  
                                 FROM `tb_detail_jadwal` AS dj 
                                 JOIN tb_jadwal AS j ON dj.jadwal_id = j.id 
                                 JOIN tb_siswa AS s ON j.siswa_id = s.id 
@@ -364,19 +366,67 @@ class JadwalController extends Controller
         return $model;
     }
 
-    public function getJadwalForHistory()
+    public function getJadwalForHistory(Request $request)
     {
+        $user = User::find($request->input('user_id'));
+        $pengajar = $user->pengajar;
         $model = DB::select('SELECT 
-                                dj.*,
-                                j.*,
-                                s.fullname,s.photo,h.id AS history_id 
+                                    dj.*,
+                                    j.status,j.pengajar_id,
+                                    s.fullname,s.photo,s.siswa_cp, 
+                                    m.nama AS nama_mapel, 
+                                    t.nama AS nama_tingkat, 
+                                    h.id AS history_id 
                                 FROM tb_detail_jadwal AS dj 
                                 JOIN tb_jadwal AS j ON dj.jadwal_id=j.id 
                                 JOIN tb_siswa AS s ON j.siswa_id=s.id 
+                                JOIN tb_mapel AS m ON j.mapel_id=m.id 
+                                JOIN tb_tingkat_pendidikan AS t ON m.tingkat_pendidikan=t.id 
                                 LEFT JOIN tb_history AS h ON h.detail_jadwal_id = dj.id 
-                                WHERE h.id IS NULL 
+                                WHERE 
+                                    h.id IS NULL AND 
+                                    j.status = "1" AND 
+                                    j.pengajar_id = "'.$pengajar->id.'"
                                 ORDER BY tgl_pertemuan ASC, waktu_mulai ASC');
-        dd($model);
+        if (count($model)>0){
+            $data = array();
+            $i = 0;
+            foreach ($model as $row){
+                $data[$i]['jadwal_id'] = $row->jadwal_id;
+                $data[$i]['detail_jadwal_id'] = $row->id;
+                $data[$i]['nama_siswa'] = $row->fullname;
+
+                $data[$i]['no_telp'] = $row->siswa_cp;
+                $data[$i]['photo'] = $row->photo;
+                $data[$i]['label_mapel'] = $row->nama_mapel." - ".$row->nama_tingkat;
+                $data[$i]['label_tanggal'] =  date("l, d-m-Y", strtotime($row->tgl_pertemuan));
+                $data[$i]['label_waktu'] = date("H:i", strtotime($row->waktu_mulai))." WITA";
+                $data[$i]['label_tempat'] = $row->tempat;
+                $data[$i]['pertemuan'] = $row->pertemuan;
+                $i++;
+            }
+            return response()->json(['status'=>1,'data'=>$data]);
+        }else{
+            return response()->json(['status'=>0]);
+        }
+    }
+
+    public function createHistory(Request $request){
+        $jadwal = Jadwal::find($request->input('jadwal_id'));
+
+        $model = new History();
+        $model->detail_jadwal_id = $request->input('detail_jadwal_id');
+        $model->siswa_id = $jadwal->siswa_id;
+        $model->pengajar_id = $jadwal->pengajar_id;
+        $model->history_keterangan = $request->input('keterangan');
+        $model->tambahan_jam = $request->input('kelebihanWaktu');
+        if($model->save()){
+            //TODO proses pembayaran
+            return response()->json(['status'=>1]);
+        }else{
+            return response()->json(['status'=>0,'error'=>'Gagal menyimpan data.']);
+        }
+
     }
 
 }

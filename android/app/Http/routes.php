@@ -68,3 +68,7 @@ $app->post('/getDetailRequestSiswa', ['as'=>'getDetailRequestSiswa', 'uses' => '
 $app->post('/tolakJadwal', ['as'=>'tolakJadwal', 'uses' => 'JadwalController@tolakJadwal']);
 
 $app->post('/terimaJadwal', ['as'=>'terimaJadwal', 'uses' => 'JadwalController@terimaJadwal']);
+
+$app->post('/getJadwalForHistory', ['as'=>'getJadwalForHistory', 'uses' => 'JadwalController@getJadwalForHistory']);
+
+$app->post('/createHistory', ['as'=>'createHistory', 'uses' => 'JadwalController@createHistory']);
