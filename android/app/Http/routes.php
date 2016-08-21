@@ -72,3 +72,5 @@ $app->post('/terimaJadwal', ['as'=>'terimaJadwal', 'uses' => 'JadwalController@t
 $app->post('/getJadwalForHistory', ['as'=>'getJadwalForHistory', 'uses' => 'JadwalController@getJadwalForHistory']);
 
 $app->post('/createHistory', ['as'=>'createHistory', 'uses' => 'JadwalController@createHistory']);
+
+$app->post('/getHistoryPengajar', ['as'=>'getHistoryPengajar', 'uses' => 'JadwalController@getHistoryPengajar']);
