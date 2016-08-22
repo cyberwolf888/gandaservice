@@ -76,3 +76,9 @@ $app->post('/createHistory', ['as'=>'createHistory', 'uses' => 'JadwalController
 $app->post('/getHistoryPengajar', ['as'=>'getHistoryPengajar', 'uses' => 'JadwalController@getHistoryPengajar']);
 
 $app->post('/getJadwalLesPengajar', ['as'=>'getJadwalLesPengajar', 'uses' => 'JadwalController@getJadwalLesPengajar']);
+
+$app->post('/getHistorySiswa', ['as'=>'getHistorySiswa', 'uses' => 'JadwalController@getHistorySiswa']);
+
+$app->post('/getJadwalLesSiswa', ['as'=>'getJadwalLesSiswa', 'uses' => 'JadwalController@getJadwalLesSiswa']);
+
+$app->post('/getProgramEdukasi', ['as'=>'getPrgramEdukasi', 'uses' => 'ProgramEdukasiController@showAll']);

@@ -202,7 +202,7 @@ class JadwalController extends Controller
         if($jadwal->save()){
             $result = true;
             for($i=0; $i<$paket->jumlah_pertemuan; $i++){
-                $timestamp = strtotime($request->input("waktu_pertemuan".$i)) + 60*90;
+                $timestamp = strtotime($request->input("waktu_pertemuan".$i)) + 60*$paket->durasi;
                 $waktu_selesai = date('H:i', $timestamp);
                 if($i>0){
                     $waktu_pertemuan = date("Y-m-d H:i:s",strtotime($request->input("tgl_pertemuan" . $i)));
@@ -505,6 +505,99 @@ class JadwalController extends Controller
                 $data[$i]['detail_jadwal_id'] = $row->id;
                 $data[$i]['nama_siswa'] = $row->fullname;
                 $data[$i]['no_telp'] = $row->siswa_cp;
+                $data[$i]['photo'] = $row->photo;
+                $data[$i]['label_mapel'] = $row->nama_mapel." - ".$row->nama_tingkat;
+                $data[$i]['label_tanggal'] =  date("l, d-m-Y", strtotime($row->tgl_pertemuan));
+                $data[$i]['label_waktu'] = date("H:i", strtotime($row->waktu_mulai))." WITA";
+                $data[$i]['label_tempat'] = $row->tempat;
+                $data[$i]['pertemuan'] = $row->pertemuan;
+                $i++;
+            }
+            return response()->json(['status'=>1,'data'=>$data]);
+        }else{
+            return response()->json(['status'=>0]);
+        }
+    }
+
+    public function getHistorySiswa(Request $request)
+    {
+        $user = User::find($request->input('user_id'));
+        $siswa = $user->siswa;
+        $model = DB::select('SELECT 
+                                    dj.*,
+                                    j.status,j.pengajar_id,j.siswa_id, 
+                                    p.fullname,p.photo,p.pengajar_cp, 
+                                    m.nama AS nama_mapel, 
+                                    t.nama AS nama_tingkat, 
+                                    h.id AS history_id,history_keterangan,tambahan_jam,
+                                    pk.durasi 
+                                FROM tb_detail_jadwal AS dj 
+                                JOIN tb_jadwal AS j ON dj.jadwal_id=j.id 
+                                JOIN tb_pengajar AS p ON j.pengajar_id=p.id 
+                                JOIN tb_mapel AS m ON j.mapel_id=m.id 
+                                JOIN tb_tingkat_pendidikan AS t ON m.tingkat_pendidikan=t.id 
+                                JOIN tb_paket AS pk ON j.paket_id=pk.id 
+                                LEFT JOIN tb_history AS h ON h.detail_jadwal_id = dj.id 
+                                WHERE 
+                                    h.id IS NOT NULL AND 
+                                    j.status = "1" AND 
+                                    j.siswa_id = "'.$siswa->id.'"
+                                ORDER BY tgl_pertemuan ASC, waktu_mulai ASC');
+        if (count($model)>0){
+            $data = array();
+            $i = 0;
+            foreach ($model as $row){
+                $data[$i]['jadwal_id'] = $row->jadwal_id;
+                $data[$i]['detail_jadwal_id'] = $row->id;
+                $data[$i]['nama_pengajar'] = $row->fullname;
+                $data[$i]['no_telp'] = $row->pengajar_cp;
+                $data[$i]['photo'] = $row->photo;
+                $data[$i]['label_mapel'] = $row->nama_mapel." - ".$row->nama_tingkat;
+                $data[$i]['label_tanggal'] =  date("l, d-m-Y", strtotime($row->tgl_pertemuan));
+                $data[$i]['label_waktu'] = date("H:i", strtotime($row->waktu_mulai))." WITA";
+                $data[$i]['label_tempat'] = $row->tempat;
+                $data[$i]['pertemuan'] = $row->pertemuan;
+                $data[$i]['keterangan'] = $row->history_keterangan;
+                $data[$i]['tambahan_jam'] = $row->tambahan_jam;
+                $data[$i]['durasi'] = $row->durasi+$row->tambahan_jam;;
+                $i++;
+            }
+            return response()->json(['status'=>1,'data'=>$data]);
+        }else{
+            return response()->json(['status'=>0]);
+        }
+    }
+
+    public function getJadwalLesSiswa(Request $request)
+    {
+        $user = User::find($request->input('user_id'));
+        $siswa = $user->siswa;
+        $model = DB::select('SELECT 
+                                    dj.*,
+                                    j.status,j.pengajar_id,j.siswa_id, 
+                                    p.fullname,p.photo,p.pengajar_cp,  
+                                    m.nama AS nama_mapel, 
+                                    t.nama AS nama_tingkat, 
+                                    h.id AS history_id 
+                                FROM tb_detail_jadwal AS dj 
+                                JOIN tb_jadwal AS j ON dj.jadwal_id=j.id 
+                                JOIN tb_pengajar AS p ON j.pengajar_id=p.id 
+                                JOIN tb_mapel AS m ON j.mapel_id=m.id 
+                                JOIN tb_tingkat_pendidikan AS t ON m.tingkat_pendidikan=t.id 
+                                LEFT JOIN tb_history AS h ON h.detail_jadwal_id = dj.id 
+                                WHERE 
+                                    h.id IS NULL AND 
+                                    j.status = "1" AND 
+                                    j.siswa_id = "'.$siswa->id.'"
+                                ORDER BY tgl_pertemuan ASC, waktu_mulai ASC');
+        if (count($model)>0){
+            $data = array();
+            $i = 0;
+            foreach ($model as $row){
+                $data[$i]['jadwal_id'] = $row->jadwal_id;
+                $data[$i]['detail_jadwal_id'] = $row->id;
+                $data[$i]['nama_pengajar'] = $row->fullname;
+                $data[$i]['no_telp'] = $row->pengajar_cp;
                 $data[$i]['photo'] = $row->photo;
                 $data[$i]['label_mapel'] = $row->nama_mapel." - ".$row->nama_tingkat;
                 $data[$i]['label_tanggal'] =  date("l, d-m-Y", strtotime($row->tgl_pertemuan));
