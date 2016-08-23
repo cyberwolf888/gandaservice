@@ -82,3 +82,18 @@ $app->post('/getHistorySiswa', ['as'=>'getHistorySiswa', 'uses' => 'JadwalContro
 $app->post('/getJadwalLesSiswa', ['as'=>'getJadwalLesSiswa', 'uses' => 'JadwalController@getJadwalLesSiswa']);
 
 $app->post('/getProgramEdukasi', ['as'=>'getPrgramEdukasi', 'uses' => 'ProgramEdukasiController@showAll']);
+
+$app->post('/cekRating', ['as'=>'cekRating', 'uses' => 'RatingController@cekRating']);
+
+$app->post('/createRating', ['as'=>'createRating', 'uses' => 'RatingController@createRating']);
+
+$app->post('/test', function(){
+    $onesignal = new \App\Plugins\OneSignal();
+    $onesignal->app_type = \App\Plugins\OneSignal::PENGAJAR;
+    $onesignal->title = "Ganda Teacher";
+    $onesignal->message = "Test notif pengajar hahahahaha";
+
+    $response = $onesignal->sendMessageTo(['521333b8-9d0f-46c0-8b3d-3dba23d7cf98']);
+
+    dd($response);
+});

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Pengajar extends Model
 {
@@ -22,5 +23,17 @@ class Pengajar extends Model
     public function user()
     {
         return $this->belongsTo('App\User','user_id');
+    }
+
+    public function getRating()
+    {
+        $rating = DB::select('SELECT pengajar_id,SUM(rating) AS total, COUNT(rating) AS jumlah FROM tb_rating WHERE pengajar_id = "'.$this->id.'"');
+        if($rating[0]->jumlah>0){
+            $average = (float) $rating[0]->total/$rating[0]->jumlah;
+            return round($average, 1, PHP_ROUND_HALF_DOWN);
+        }else{
+            return (float) 0;
+        }
+
     }
 }

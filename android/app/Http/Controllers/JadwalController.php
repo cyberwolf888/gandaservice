@@ -10,6 +10,7 @@ namespace App\Http\Controllers;
 
 
 use App\Models\Cabang;
+use App\Models\CheckRating;
 use App\Models\DetailJadwal;
 use App\Models\History;
 use App\Models\Jadwal;
@@ -19,6 +20,8 @@ use App\Models\MapelPengajar;
 use App\Models\Paket;
 use App\Models\Pembayaran;
 use App\Models\Pengajar;
+use App\Models\Rating;
+use App\Models\Tarif;
 use App\Models\TingkatPendidikanPengajar;
 use App\User;
 use Illuminate\Http\Request;
@@ -157,6 +160,7 @@ class JadwalController extends Controller
             $pengajar['lecture'] = $lecture;
             $pengajar['jenjang_mengajar'] = $tingkat_pengajar;
             $pengajar['label_cabang'] = $cabang->nama;
+            $pengajar['rating'] = $pengajar->getRating();
             return response()->json(['status'=>1,'data'=>$pengajar]);
         }else{
             return response()->json(['status'=>0]);
@@ -231,6 +235,8 @@ class JadwalController extends Controller
                 }
             }
             if($result){
+                //TODO notifikasi ke pengajar ada request baru
+
                 return response()->json(['status'=>1]);
             }else{
                 DetailJadwal::where('jadwal_id', $jadwal->id)->delete();
@@ -413,7 +419,8 @@ class JadwalController extends Controller
 
     public function createHistory(Request $request){
         $jadwal = Jadwal::find($request->input('jadwal_id'));
-
+        $detail = DetailJadwal::find($request->input('detail_jadwal_id'));
+        $paket = $jadwal->paket;
         $model = new History();
         $model->detail_jadwal_id = $request->input('detail_jadwal_id');
         $model->siswa_id = $jadwal->siswa_id;
@@ -421,7 +428,36 @@ class JadwalController extends Controller
         $model->history_keterangan = $request->input('keterangan');
         $model->tambahan_jam = $request->input('kelebihanWaktu');
         if($model->save()){
-            //TODO proses pembayaran
+            //Rating
+            if($detail->pertemuan==$paket->jumlah_pertemuan){
+                $rating = new CheckRating();
+                $rating->siswa_id = $jadwal->siswa_id;
+                $rating->pengajar_id = $jadwal->pengajar_id;
+                $rating->jadwal_id = $jadwal->id;
+                $rating->save();
+            }
+
+            //bayar kelebihan jam
+            if($model->tambahan_jam>0){
+                $pengajar = Pengajar::find($model->pengajar_id);
+                $rating = $pengajar->getRating();
+                $lebih = round($model->tambahan_jam/15, 0, PHP_ROUND_HALF_UP);
+                $tarif = Tarif::getTarifByRate($rating);
+                $biaya = $tarif*$lebih;
+                $pembayaran = new Pembayaran();
+                $pembayaran->siswa_id = $model->siswa_id;
+                $pembayaran->pengajar_id = $model->pengajar_id;
+                $pembayaran->history_id = $model->id;
+                $pembayaran->jadwal_id = $jadwal->id;
+                $pembayaran->jenis_tagihan = Pembayaran::JADWAL;
+                $pembayaran->jumlah = $biaya;
+                $pembayaran->pembayaran_metode = Pembayaran::TRANSFER_BANK;
+                $pembayaran->pembayaran_status = Pembayaran::PROSES;
+                $pembayaran->save();
+            }
+
+            //TODO notifikasi ke siswa ada pembayaran jadwal
+
             return response()->json(['status'=>1]);
         }else{
             return response()->json(['status'=>0,'error'=>'Gagal menyimpan data.']);
@@ -559,7 +595,17 @@ class JadwalController extends Controller
                 $data[$i]['pertemuan'] = $row->pertemuan;
                 $data[$i]['keterangan'] = $row->history_keterangan;
                 $data[$i]['tambahan_jam'] = $row->tambahan_jam;
-                $data[$i]['durasi'] = $row->durasi+$row->tambahan_jam;;
+                $data[$i]['durasi'] = $row->durasi+$row->tambahan_jam;
+                if($row->tambahan_jam>0){
+                    $pengajar = Pengajar::find($row->pengajar_id);
+                    $rating = $pengajar->getRating();
+                    $lebih = round($row->tambahan_jam/15, 0, PHP_ROUND_HALF_UP);
+                    $tarif = Tarif::getTarifByRate($rating);
+                    $biaya = $tarif*$lebih;
+                    $data[$i]['biaya'] = number_format($biaya, 0, ',', '.');
+                }else{
+                    $data[$i]['biaya'] = 0;
+                }
                 $i++;
             }
             return response()->json(['status'=>1,'data'=>$data]);
