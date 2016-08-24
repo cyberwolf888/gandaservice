@@ -87,7 +87,14 @@ $app->post('/cekRating', ['as'=>'cekRating', 'uses' => 'RatingController@cekRati
 
 $app->post('/createRating', ['as'=>'createRating', 'uses' => 'RatingController@createRating']);
 
+$app->post('/getPayment', ['as'=>'getPayment', 'uses' => 'PembayaranController@getPayment']);
+
+$app->post('/cekBuktiPembayaran', ['as'=>'cekBuktiPembayaran', 'uses' => 'PembayaranController@cekBuktiPembayaran']);
+
+$app->post('/createBuktiPembayaran', ['as'=>'createBuktiPembayaran', 'uses' => 'PembayaranController@createBuktiPembayaran']);
+
 $app->post('/test', function(){
+
     $onesignal = new \App\Plugins\OneSignal();
     $onesignal->app_type = \App\Plugins\OneSignal::PENGAJAR;
     $onesignal->title = "Ganda Teacher";

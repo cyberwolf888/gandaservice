@@ -336,7 +336,7 @@ class JadwalController extends Controller
             $pembayaran->jadwal_id = $jadwal->id;
             $pembayaran->jenis_tagihan = Pembayaran::PROGRAM;
             $pembayaran->jumlah = $jadwal->paket->tarif->harga;
-            $pembayaran->pembayaran_metode = Pembayaran::TRANSFER_BANK;
+            $pembayaran->pembayaran_metode = Pembayaran::CASH;
             $pembayaran->pembayaran_status = Pembayaran::PROSES;
             if($pembayaran->save()){
                 return response()->json(['status'=>1]);
@@ -451,7 +451,7 @@ class JadwalController extends Controller
                 $pembayaran->jadwal_id = $jadwal->id;
                 $pembayaran->jenis_tagihan = Pembayaran::JADWAL;
                 $pembayaran->jumlah = $biaya;
-                $pembayaran->pembayaran_metode = Pembayaran::TRANSFER_BANK;
+                $pembayaran->pembayaran_metode = Pembayaran::CASH;
                 $pembayaran->pembayaran_status = Pembayaran::PROSES;
                 $pembayaran->save();
             }
