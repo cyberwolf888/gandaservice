@@ -93,6 +93,10 @@ $app->post('/cekBuktiPembayaran', ['as'=>'cekBuktiPembayaran', 'uses' => 'Pembay
 
 $app->post('/createBuktiPembayaran', ['as'=>'createBuktiPembayaran', 'uses' => 'PembayaranController@createBuktiPembayaran']);
 
+$app->post('/createNotif', ['as'=>'createNotif', 'uses' => 'UserController@createNotif']);
+
+$app->post('/deleteNotif', ['as'=>'deleteNotif', 'uses' => 'UserController@deleteNotif']);
+
 $app->post('/test', function(){
 
     $onesignal = new \App\Plugins\OneSignal();

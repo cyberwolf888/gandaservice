@@ -17,6 +17,7 @@ use App\Models\Jadwal;
 use App\Models\JadwalPengajar;
 use App\Models\Mapel;
 use App\Models\MapelPengajar;
+use App\Models\Notif;
 use App\Models\Paket;
 use App\Models\Pembayaran;
 use App\Models\Pengajar;
@@ -235,8 +236,15 @@ class JadwalController extends Controller
                 }
             }
             if($result){
-                //TODO notifikasi ke pengajar ada request baru
-
+                //notifikasi ke pengajar ada request baru
+                $notif = Notif::where('user_id',$pengajar->user_id)->first();
+                if(count($notif)>0){
+                    $onesignal = new \App\Plugins\OneSignal();
+                    $onesignal->app_type = \App\Plugins\OneSignal::PENGAJAR;
+                    $onesignal->title = "Ganda Teacher";
+                    $onesignal->message = "Ada request siswa baru.";
+                    $onesignal->sendMessageTo([$notif->onesignal_id]);
+                }
                 return response()->json(['status'=>1]);
             }else{
                 DetailJadwal::where('jadwal_id', $jadwal->id)->delete();
@@ -339,6 +347,15 @@ class JadwalController extends Controller
             $pembayaran->pembayaran_metode = Pembayaran::CASH;
             $pembayaran->pembayaran_status = Pembayaran::PROSES;
             if($pembayaran->save()){
+                //notifikasi ke siswa jadwal ditererima dan pembayaran
+                $notif = Notif::where('user_id',$jadwal->siswa->user_id)->first();
+                if(count($notif)>0){
+                    $onesignal = new \App\Plugins\OneSignal();
+                    $onesignal->app_type = \App\Plugins\OneSignal::SISWA;
+                    $onesignal->title = "Ganda Edukasi";
+                    $onesignal->message = "Jadwal anda telah diterima dan ada pembayaran baru.";
+                    $onesignal->sendMessageTo([$notif->onesignal_id]);
+                }
                 return response()->json(['status'=>1]);
             }else{
                 $jadwal->status = 3;
@@ -430,6 +447,9 @@ class JadwalController extends Controller
         if($model->save()){
             //Rating
             if($detail->pertemuan==$paket->jumlah_pertemuan){
+                $jadwal->status = 2;
+                $jadwal->save();
+
                 $rating = new CheckRating();
                 $rating->siswa_id = $jadwal->siswa_id;
                 $rating->pengajar_id = $jadwal->pengajar_id;
@@ -456,8 +476,15 @@ class JadwalController extends Controller
                 $pembayaran->save();
             }
 
-            //TODO notifikasi ke siswa ada pembayaran jadwal
-
+            //notifikasi ke siswa ada pembayaran jadwal
+            $notif = Notif::where('user_id',$jadwal->siswa->user_id)->first();
+            if(count($notif)>0){
+                $onesignal = new \App\Plugins\OneSignal();
+                $onesignal->app_type = \App\Plugins\OneSignal::SISWA;
+                $onesignal->title = "Ganda Edukasi";
+                $onesignal->message = "Ada history pertemuan baru.";
+                $onesignal->sendMessageTo([$notif->onesignal_id]);
+            }
             return response()->json(['status'=>1]);
         }else{
             return response()->json(['status'=>0,'error'=>'Gagal menyimpan data.']);

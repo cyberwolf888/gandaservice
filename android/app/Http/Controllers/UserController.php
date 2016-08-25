@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Cabang;
 use App\Models\Mapel;
 use App\Models\MapelPengajar;
+use App\Models\Notif;
 use App\Models\Pengajar;
 use App\Models\Siswa;
 use App\Models\TingkatPendidikan;
@@ -390,5 +391,26 @@ class UserController extends Controller
         }
     }
 
+    public function createNotif(Request $request)
+    {
+        $notif = Notif::where('user_id',$request->input('user_id'))->first();
+        if(count($notif)>0){
+            $notif->onesignal_id = $request->input('onesignal_id');
+            $notif->save();
+        }else{
+            $model = new Notif();
+            $model->user_id = $request->input('user_id');
+            $model->onesignal_id = $request->input('onesignal_id');
+            $model->save();
+        }
+    }
+
+    public function deleteNotif(Request $request)
+    {
+        $notif = Notif::where('user_id',$request->input('user_id'))->first();
+        if(count($notif)>0){
+            $notif->delete();
+        }
+    }
     //
 }
