@@ -7,6 +7,7 @@ use App\Models\Mapel;
 use App\Models\MapelPengajar;
 use App\Models\Notif;
 use App\Models\Pengajar;
+use App\Models\PrestasiPengajar;
 use App\Models\Siswa;
 use App\Models\TingkatPendidikan;
 use App\Models\TingkatPendidikanPengajar;
@@ -74,6 +75,14 @@ class UserController extends Controller
                 $mPengajar->pengajar_pendidikan = $request->input('edukasi');
                 $mPengajar->status_mengajar = Pengajar::AVALAIBLE;
                 if($mPengajar->save()){
+                    if($request->input('jumlah_prestasi')>0){
+                        for($i=1; $i<=$request->input('jumlah_prestasi'); $i++){
+                            $prestasi = new PrestasiPengajar();
+                            $prestasi->pengajar_id = $mPengajar->id;
+                            $prestasi->prestasi = $request->input('prestasi'.$i);
+                            $prestasi->save();
+                        }
+                    }
                     $msg = "Klik tautan berikut untuk mengaktifkan account anda: \n".route('activation',['token'=>$model->token]);
                     $msg = wordwrap($msg,70);
                     mail($request->input('email'),"Ganda Edukasi - Account Activation",$msg);
