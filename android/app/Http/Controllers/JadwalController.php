@@ -216,7 +216,7 @@ class JadwalController extends Controller
                     if($old_time>=$waktu_pertemuan){
                         $result = false;
                         $xi = $i+1;
-                        $error = "Tanggal pertemuan ".$xi." salah!";
+                        $error = "Tanggal pertemuan ".$xi." tidak tersedia.";
                         break;
                     }
                 }
@@ -241,7 +241,7 @@ class JadwalController extends Controller
                 if(count($notif)>0){
                     $onesignal = new \App\Plugins\OneSignal();
                     $onesignal->app_type = \App\Plugins\OneSignal::PENGAJAR;
-                    $onesignal->title = "Ganda Teacher";
+                    $onesignal->title = "Edukezy Teacher";
                     $onesignal->message = "Ada request siswa baru.";
                     $onesignal->sendMessageTo([$notif->onesignal_id]);
                 }
@@ -290,7 +290,7 @@ class JadwalController extends Controller
             foreach ($detail as $row){
                 $m_detail[$i]['id'] = $row->id;
                 $m_detail[$i]['label_mapel'] = $jadwal->mapel->nama." - ".$jadwal->mapel->tingkat->nama;
-                $m_detail[$i]['label_tanggal'] = date("l, d-m-Y", strtotime($row->tgl_pertemuan));
+                $m_detail[$i]['label_tanggal'] = Jadwal::getLabelTanggal($row->tgl_pertemuan);
                 $m_detail[$i]['label_waktu'] = date("H:i",strtotime($row->waktu_mulai))." WITA";
                 $m_detail[$i]['label_tempat'] = $row->tempat;
                 $i++;
@@ -352,7 +352,7 @@ class JadwalController extends Controller
                 if(count($notif)>0){
                     $onesignal = new \App\Plugins\OneSignal();
                     $onesignal->app_type = \App\Plugins\OneSignal::SISWA;
-                    $onesignal->title = "Ganda Edukasi";
+                    $onesignal->title = "Edukezy";
                     $onesignal->message = "Jadwal anda telah diterima dan ada pembayaran baru.";
                     $onesignal->sendMessageTo([$notif->onesignal_id]);
                 }
@@ -422,7 +422,7 @@ class JadwalController extends Controller
                 $data[$i]['no_telp'] = $row->siswa_cp;
                 $data[$i]['photo'] = $row->photo;
                 $data[$i]['label_mapel'] = $row->nama_mapel." - ".$row->nama_tingkat;
-                $data[$i]['label_tanggal'] =  date("l, d-m-Y", strtotime($row->tgl_pertemuan));
+                $data[$i]['label_tanggal'] =  Jadwal::getLabelTanggal($row->tgl_pertemuan);
                 $data[$i]['label_waktu'] = date("H:i", strtotime($row->waktu_mulai))." WITA";
                 $data[$i]['label_tempat'] = $row->tempat;
                 $data[$i]['pertemuan'] = $row->pertemuan;
@@ -481,7 +481,7 @@ class JadwalController extends Controller
             if(count($notif)>0){
                 $onesignal = new \App\Plugins\OneSignal();
                 $onesignal->app_type = \App\Plugins\OneSignal::SISWA;
-                $onesignal->title = "Ganda Edukasi";
+                $onesignal->title = "Edukezy";
                 $onesignal->message = "Ada history pertemuan baru.";
                 $onesignal->sendMessageTo([$notif->onesignal_id]);
             }
@@ -524,7 +524,7 @@ class JadwalController extends Controller
                 $data[$i]['no_telp'] = $row->siswa_cp;
                 $data[$i]['photo'] = $row->photo;
                 $data[$i]['label_mapel'] = $row->nama_mapel." - ".$row->nama_tingkat;
-                $data[$i]['label_tanggal'] =  date("l, d-m-Y", strtotime($row->tgl_pertemuan));
+                $data[$i]['label_tanggal'] = Jadwal::getLabelTanggal($row->tgl_pertemuan);
                 $data[$i]['label_waktu'] = date("H:i", strtotime($row->waktu_mulai))." WITA";
                 $data[$i]['label_tempat'] = $row->tempat;
                 $data[$i]['pertemuan'] = $row->pertemuan;
@@ -570,7 +570,7 @@ class JadwalController extends Controller
                 $data[$i]['no_telp'] = $row->siswa_cp;
                 $data[$i]['photo'] = $row->photo;
                 $data[$i]['label_mapel'] = $row->nama_mapel." - ".$row->nama_tingkat;
-                $data[$i]['label_tanggal'] =  date("l, d-m-Y", strtotime($row->tgl_pertemuan));
+                $data[$i]['label_tanggal'] = Jadwal::getLabelTanggal($row->tgl_pertemuan);
                 $data[$i]['label_waktu'] = date("H:i", strtotime($row->waktu_mulai))." WITA";
                 $data[$i]['label_tempat'] = $row->tempat;
                 $data[$i]['pertemuan'] = $row->pertemuan;
@@ -616,7 +616,7 @@ class JadwalController extends Controller
                 $data[$i]['no_telp'] = $row->pengajar_cp;
                 $data[$i]['photo'] = $row->photo;
                 $data[$i]['label_mapel'] = $row->nama_mapel." - ".$row->nama_tingkat;
-                $data[$i]['label_tanggal'] =  date("l, d-m-Y", strtotime($row->tgl_pertemuan));
+                $data[$i]['label_tanggal'] =  Jadwal::getLabelTanggal($row->tgl_pertemuan);
                 $data[$i]['label_waktu'] = date("H:i", strtotime($row->waktu_mulai))." WITA";
                 $data[$i]['label_tempat'] = $row->tempat;
                 $data[$i]['pertemuan'] = $row->pertemuan;
@@ -673,7 +673,7 @@ class JadwalController extends Controller
                 $data[$i]['no_telp'] = $row->pengajar_cp;
                 $data[$i]['photo'] = $row->photo;
                 $data[$i]['label_mapel'] = $row->nama_mapel." - ".$row->nama_tingkat;
-                $data[$i]['label_tanggal'] =  date("l, d-m-Y", strtotime($row->tgl_pertemuan));
+                $data[$i]['label_tanggal'] =  Jadwal::getLabelTanggal($row->tgl_pertemuan);
                 $data[$i]['label_waktu'] = date("H:i", strtotime($row->waktu_mulai))." WITA";
                 $data[$i]['label_tempat'] = $row->tempat;
                 $data[$i]['pertemuan'] = $row->pertemuan;

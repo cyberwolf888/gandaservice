@@ -33,4 +33,10 @@ class Jadwal extends Model
         return $this->belongsTo('App\Models\Paket','paket_id');
     }
 
+    public static function getLabelTanggal($tanggal)
+    {
+        $hari = ['Sunday'=>'Minggu','Monday'=>'Senin','Tuesday'=>'Selasa','Wednesday'=>'Rabu','Thursday'=>'Kamis','Friday'=>'Jumat','Saturday'=>'Sabtu'];
+        return $hari[date("l", strtotime($tanggal))].", ".date("d-m-Y", strtotime($tanggal));
+    }
+
 }
