@@ -83,9 +83,25 @@ class UserController extends Controller
                             $prestasi->save();
                         }
                     }
-                    $msg = "Klik tautan berikut untuk mengaktifkan account anda: \n".route('activation',['token'=>$model->token]);
-                    $msg = wordwrap($msg,70);
-                    mail($request->input('email'),"Ganda Edukasi - Account Activation",$msg);
+                    //$msg = 'Klik <a href="'.route('activation',['token'=>$model->token]).'">disini</a> atau tautan berikut untuk verifikasi email anda: \n'.route('activation',['token'=>$model->token]);
+                    //$msg = wordwrap($msg,70);
+                    //mail($request->input('email'),"Ganda Edukasi - Account Activation",$msg);
+                    $to = $request->input('email');
+                    $subject = 'Edukezy - Account Activation';
+                    $from = 'info@edukezy.com/';
+
+                    $headers  = 'MIME-Version: 1.0' . "\r\n";
+                    $headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
+                    $headers .= 'From: '.$from."\r\n".
+                        'Reply-To: '.$from."\r\n" .
+                        'X-Mailer: PHP/' . phpversion();
+
+                    $message = '<html><body>';
+                    $message .= '<h3 style="color:#000000;">Hi '.$mPengajar->fullname.'!</h3>';
+                    $message .= '<p style="color:#000000;font-size:18px;">Klik <a href="'.route('activation',['token'=>$model->token]).'">disini</a> atau tautan berikut untuk verifikasi email anda: '.route('activation',['token'=>$model->token]).'</p>';
+                    $message .= '</body></html>';
+
+                    mail($to, $subject, $message, $headers);
                     return response()->json(['status'=>1]);
                 }
             }
@@ -132,9 +148,27 @@ class UserController extends Controller
                         $mSiswa->siswa_wali = ucfirst($request->input('wali'));
                         $mSiswa->siswa_pendidikan = $tingkat->id;
                         if($mSiswa->save()){
-                            $msg = "Klik tautan berikut untuk mengaktifkan account anda: \n".route('activation',['token'=>$model->token]);
-                            $msg = wordwrap($msg,70);
-                            mail($request->input('email'),"Ganda Edukasi - Account Activation",$msg);
+                            //$msg = "Klik tautan berikut untuk mengaktifkan account anda: \n".route('activation',['token'=>$model->token]);
+                            //$msg = wordwrap($msg,70);
+                            //mail($request->input('email'),"Ganda Edukasi - Account Activation",$msg);
+
+                            $to = $request->input('email');
+                            $subject = 'Edukezy - Account Activation';
+                            $from = 'info@edukezy.com/';
+
+                            $headers  = 'MIME-Version: 1.0' . "\r\n";
+                            $headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
+                            $headers .= 'From: '.$from."\r\n".
+                                'Reply-To: '.$from."\r\n" .
+                                'X-Mailer: PHP/' . phpversion();
+
+                            $message = '<html><body>';
+                            $message .= '<h3 style="color:#000000;">Hi '.$mSiswa->fullname.'!</h3>';
+                            $message .= '<p style="color:#000000;font-size:18px;">Klik <a href="'.route('activation',['token'=>$model->token]).'">disini</a> atau tautan berikut untuk verifikasi email anda: '.route('activation',['token'=>$model->token]).'</p>';
+                            $message .= '</body></html>';
+
+                            mail($to, $subject, $message, $headers);
+
                             return response()->json(['status'=>1]);
                         }
                     }
@@ -267,15 +301,21 @@ class UserController extends Controller
         if($user && count($user)>0){
             if($user->type == User::PENGAJAR){
                 $user->status = 0;
-                $message = "Email anda berhasil diverifikasi. Mohon tunggu konfirmasi dari support kami untuk meninjau account anda.";
+                $message = "<h3>Email anda telah diverifikasi. Mohon tunggu konfirmasi dari support kami untuk meninjau account anda.</h3>";
             }else{
                 $user->status = 1;
-                $message = "Account anda telah aktif. Silahkan login melalui aplikasi.";
+                $message = "<h3>Account anda telah aktif. Silahkan login melalui aplikasi.</h3>";
+            }
+            if($user->type == User::PENGAJAR && $user->status == 0){
+                $user->status = 0;
+                $message = "<h3>Email anda telah diverifikasi. Mohon tunggu konfirmasi dari support kami untuk meninjau account anda.</h3>";
             }
             $user->token = null;
             if($user->save()){
                 return $message;
             }
+        }else{
+            return "<h3>Email anda telah diverifikasi. Mohon tunggu konfirmasi dari support kami untuk meninjau account anda.</h3>";
         }
     }
 

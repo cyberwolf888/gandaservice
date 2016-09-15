@@ -97,14 +97,22 @@ $app->post('/createNotif', ['as'=>'createNotif', 'uses' => 'UserController@creat
 
 $app->post('/deleteNotif', ['as'=>'deleteNotif', 'uses' => 'UserController@deleteNotif']);
 
-$app->post('/test', function(){
+$app->get('/test', function(){
 
-    $onesignal = new \App\Plugins\OneSignal();
-    $onesignal->app_type = \App\Plugins\OneSignal::PENGAJAR;
-    $onesignal->title = "Ganda Teacher";
-    $onesignal->message = "Test notif pengajar hahahahaha";
+    $to = "intenagung344@yahoo.co.id";
+    $subject = 'Edukezy - Account Activation';
+    $from = 'info@edukezy.com';
 
-    $response = $onesignal->sendMessageTo(['521333b8-9d0f-46c0-8b3d-3dba23d7cf98']);
+    $headers  = 'MIME-Version: 1.0' . "\r\n";
+    $headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
+    $headers .= 'From: '.$from."\r\n".
+        'Reply-To: '.$from."\r\n" .
+        'X-Mailer: PHP/' . phpversion();
 
-    dd($response);
+    $message = '<html><body>';
+    $message .= '<h3 style="color:#000000;">Hi Anak Agung Inten Sakanti!</h3>';
+    $message .= '<p style="color:#000000;font-size:18px;">Klik <a href="'.route('activation',['token'=>'fdf3ca9973f38d75b5947fc3474ec546']).'">disini</a> atau tautan berikut untuk verifikasi email anda: '.route('activation',['token'=>'fdf3ca9973f38d75b5947fc3474ec546']).'</p>';
+    $message .= '</body></html>';
+
+    //mail($to, $subject, $message, $headers);
 });
