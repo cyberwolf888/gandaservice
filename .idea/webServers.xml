@@ -3,11 +3,10 @@
   <component name="WebServers">
     <option name="servers">
       <webServer id="6072d9bc-47f6-40ef-aa00-1e6168d58bd2" name="server" url="http://edukezy.com">
-        <fileTransfer host="edukezy.com" port="21" rootFolder="/public_html">
+        <fileTransfer host="edukezy.com" port="21" rootFolder="/public_html" username="edukezyc">
           <advancedOptions>
             <advancedOptions dataProtectionLevel="Private" />
           </advancedOptions>
-          <option name="port" value="21" />
         </fileTransfer>
       </webServer>
     </option>

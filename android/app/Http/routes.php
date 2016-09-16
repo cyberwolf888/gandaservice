@@ -97,7 +97,10 @@ $app->post('/createNotif', ['as'=>'createNotif', 'uses' => 'UserController@creat
 
 $app->post('/deleteNotif', ['as'=>'deleteNotif', 'uses' => 'UserController@deleteNotif']);
 
-$app->get('/test', function(){
+$app->post('/rescheduleJadwal', ['as'=>'rescheduleJadwal', 'uses' => 'JadwalController@rescheduleJadwal']);
+
+
+$app->get('/resend', function(){
 
     $to = "intenagung344@yahoo.co.id";
     $subject = 'Edukezy - Account Activation';

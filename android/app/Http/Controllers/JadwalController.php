@@ -116,14 +116,14 @@ class JadwalController extends Controller
             $data = array();
             $i = 0;
             foreach ($mapel_pengajar as $row){
-                $cekJadwal = Jadwal::whereRaw(DB::raw("pengajar_id = '".$row->pengajar->id."' AND 
+                $cekJadwal = Jadwal::whereRaw(DB::raw("pengajar_id = '".$row->pengajar_id."' AND
                 siswa_id = '".$siswa->id."' AND 
                 mapel_id = '".$mapel_id."' AND 
                 (status='1' OR status='3')"))->count();
                 if($cekJadwal>0){
                     continue;
                 }
-                if($row->pengajar->user->status == 1 && $row->pengajar->zona_id == $siswa->zona_id){
+                if($row->pengajar->user->status == 1 /*&& $row->pengajar->zona_id == $siswa->zona_id*/){
                     $cabang = Cabang::find($row->pengajar->zona_id);
                     $data[$i]['pengajar_id'] = $row->pengajar->id;
                     $data[$i]['mapel_id'] = $mapel_id;
@@ -682,6 +682,37 @@ class JadwalController extends Controller
             return response()->json(['status'=>1,'data'=>$data]);
         }else{
             return response()->json(['status'=>0]);
+        }
+    }
+
+    public function rescheduleJadwal(Request $request)
+    {
+        $user = User::find($request->input('user_id'));
+        $type = $request->input('type');
+        $detail_jadwal = DetailJadwal::find($request->input('id_dt_jadwal'));
+        $jadwal = $detail_jadwal->jadwal;
+        $mRequest = new \App\Models\Request();
+        if($type == "RS"){
+            //TODO reschedule
+            $mRequest->dt_jadwal_id = $request->input('id_dt_jadwal');
+            $mRequest->siswa_id = $jadwal->siswa_id;
+            $mRequest->pengajar_id = $jadwal->pengajar_id;
+            $mRequest->requested_by = $request->input('requested_by');
+            $mRequest->type = "RS";
+            $mRequest->keterangan = $request->input('keterangan');
+            $mRequest->tgl_pertemuan = $request->input('tglPertemuan');
+            $mRequest->jam_pertemuan = $request->input('waktuPertemuan');
+            $mRequest->tempat = $request->input('tempatPertemuan');
+            $mRequest->status = "2";
+            if($request->input('requested_by') == 'SISWA'){
+                $request->request_id = $user->siswa->id;
+            }else{
+                $request->request_id = $user->pengajar->id;
+            }
+
+        }
+        if($type == "CC"){
+            //TODO cancelation
         }
     }
 
