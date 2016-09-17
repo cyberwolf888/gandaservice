@@ -99,6 +99,8 @@ $app->post('/deleteNotif', ['as'=>'deleteNotif', 'uses' => 'UserController@delet
 
 $app->post('/rescheduleJadwal', ['as'=>'rescheduleJadwal', 'uses' => 'JadwalController@rescheduleJadwal']);
 
+$app->post('/cancelJadwal', ['as'=>'cancelJadwal', 'uses' => 'JadwalController@cancelJadwal']);
+
 
 $app->get('/resend', function(){
 

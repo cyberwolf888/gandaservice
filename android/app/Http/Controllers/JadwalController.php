@@ -564,6 +564,7 @@ class JadwalController extends Controller
             $data = array();
             $i = 0;
             foreach ($model as $row){
+                $data[$i]['id'] = $row->id;
                 $data[$i]['jadwal_id'] = $row->jadwal_id;
                 $data[$i]['detail_jadwal_id'] = $row->id;
                 $data[$i]['nama_siswa'] = $row->fullname;
@@ -667,6 +668,7 @@ class JadwalController extends Controller
             $data = array();
             $i = 0;
             foreach ($model as $row){
+                $data[$i]['id'] = $row->id;
                 $data[$i]['jadwal_id'] = $row->jadwal_id;
                 $data[$i]['detail_jadwal_id'] = $row->id;
                 $data[$i]['nama_pengajar'] = $row->fullname;
@@ -687,32 +689,66 @@ class JadwalController extends Controller
 
     public function rescheduleJadwal(Request $request)
     {
+        $cek = \App\Models\Request::where("dt_jadwal_id",$request->input('dt_jadwal_id'))->where('type','RS')->count();
+        if($cek>0){
+            return response()->json(['status'=>0,'error'=>'Anda sudah mengajukan perubahan jadwal untuk pertemuan ini.']);
+        }
         $user = User::find($request->input('user_id'));
         $type = $request->input('type');
-        $detail_jadwal = DetailJadwal::find($request->input('id_dt_jadwal'));
+        $detail_jadwal = DetailJadwal::find($request->input('dt_jadwal_id'));
         $jadwal = $detail_jadwal->jadwal;
         $mRequest = new \App\Models\Request();
-        if($type == "RS"){
-            //TODO reschedule
-            $mRequest->dt_jadwal_id = $request->input('id_dt_jadwal');
-            $mRequest->siswa_id = $jadwal->siswa_id;
-            $mRequest->pengajar_id = $jadwal->pengajar_id;
-            $mRequest->requested_by = $request->input('requested_by');
-            $mRequest->type = "RS";
-            $mRequest->keterangan = $request->input('keterangan');
-            $mRequest->tgl_pertemuan = $request->input('tglPertemuan');
-            $mRequest->jam_pertemuan = $request->input('waktuPertemuan');
-            $mRequest->tempat = $request->input('tempatPertemuan');
-            $mRequest->status = "2";
-            if($request->input('requested_by') == 'SISWA'){
-                $request->request_id = $user->siswa->id;
-            }else{
-                $request->request_id = $user->pengajar->id;
-            }
 
+        $mRequest->dt_jadwal_id = $request->input('dt_jadwal_id');
+        $mRequest->siswa_id = $jadwal->siswa_id;
+        $mRequest->pengajar_id = $jadwal->pengajar_id;
+        $mRequest->request_by = $request->input('requested_by');
+        $mRequest->type = $type;
+        $mRequest->tgl_pertemuan = $request->input('tglPertemuan');
+        $mRequest->jam_pertemuan = $request->input('waktuPertemuan');
+        $mRequest->tempat = $request->input('tempatPertemuan');
+        $mRequest->keterangan = $request->input('keterangan');
+        $mRequest->status = "2";
+
+        if($mRequest->request_by == 'SISWA'){
+            $mRequest->request_id = $user->siswa->id;
+        }else{
+            $mRequest->request_id = $user->pengajar->id;
         }
-        if($type == "CC"){
-            //TODO cancelation
+
+        if($mRequest->save()){
+            return response()->json(['status'=>1]);
+        }
+    }
+
+    public function cancelJadwal(Request $request)
+    {
+        $cek = \App\Models\Request::where("dt_jadwal_id",$request->input('dt_jadwal_id'))->where('type','CC')->count();
+        if($cek>0){
+            return response()->json(['status'=>0,'error'=>'Anda sudah mengajukan pembatalan jadwal untuk pertemuan ini.']);
+        }
+        $user = User::find($request->input('user_id'));
+        $type = $request->input('type');
+        $detail_jadwal = DetailJadwal::find($request->input('dt_jadwal_id'));
+        $jadwal = $detail_jadwal->jadwal;
+        $mRequest = new \App\Models\Request();
+
+        $mRequest->dt_jadwal_id = $request->input('dt_jadwal_id');
+        $mRequest->siswa_id = $jadwal->siswa_id;
+        $mRequest->pengajar_id = $jadwal->pengajar_id;
+        $mRequest->request_by = $request->input('requested_by');
+        $mRequest->type = $type;
+        $mRequest->keterangan = $request->input('keterangan');
+        $mRequest->status = "2";
+
+        if($mRequest->request_by == 'SISWA'){
+            $mRequest->request_id = $user->siswa->id;
+        }else{
+            $mRequest->request_id = $user->pengajar->id;
+        }
+
+        if($mRequest->save()){
+            return response()->json(['status'=>1]);
         }
     }
 
