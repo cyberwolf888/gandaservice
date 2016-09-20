@@ -20,6 +20,7 @@ class OneSignal
     public $title = "";
     public $message = "";
     public $app_type = "";
+    public $url = "";
 
     public $small_icon = "logo";
     public $large_icon = "logo";
@@ -86,6 +87,34 @@ class OneSignal
             'android_sound'=> $this->android_sound,
             'small_icon'=>$this->small_icon,
             'large_icon'=>$this->large_icon
+        );
+
+        $fields = json_encode($fields);
+        //print("\nJSON sent:\n");
+        //print($fields);
+
+        return $this->getResponse($fields, $auth_key);
+    }
+
+    public function sendMessageAdmin(){
+        $app_id = "35aab1a1-3fdc-4696-9efe-1c151c5072f4";
+        $auth_key = "ZWI4ZjhiZWQtMzFmYy00YTVhLWFiNmYtMDNkNjllODlkMzAx";
+
+        $content = array(
+            "en" => $this->message
+        );
+
+        $heading = array(
+            "en" => $this->title
+        );
+
+        $fields = array(
+            'app_id' => $app_id,
+            'included_segments' => array('All'),
+            'data' => array("foo" => "bar"),
+            'url' => $this->url,
+            'contents' => $content,
+            'headings' => $heading
         );
 
         $fields = json_encode($fields);

@@ -302,6 +302,7 @@ class UserController extends Controller
             if($user->type == User::PENGAJAR){
                 $user->status = 0;
                 $message = "<h3>Email anda telah diverifikasi. Mohon tunggu konfirmasi dari support kami untuk meninjau account anda.</h3>";
+                return '<meta http-equiv="refresh" content="0; url=https://edukezy.com/verifikasi.php" />';
             }else{
                 $user->status = 1;
                 $message = "<h3>Account anda telah aktif. Silahkan login melalui aplikasi.</h3>";

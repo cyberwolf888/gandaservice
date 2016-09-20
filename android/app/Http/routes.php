@@ -101,6 +101,10 @@ $app->post('/rescheduleJadwal', ['as'=>'rescheduleJadwal', 'uses' => 'JadwalCont
 
 $app->post('/cancelJadwal', ['as'=>'cancelJadwal', 'uses' => 'JadwalController@cancelJadwal']);
 
+$app->get('/test', function(){
+    return '<meta http-equiv="refresh" content="0; url=https://edukezy.com/verifikasi.php" />';
+    //redirect("https://edukezy.com/verifikasi.php");
+});
 
 $app->get('/resend', function(){
 
@@ -120,4 +124,13 @@ $app->get('/resend', function(){
     $message .= '</body></html>';
 
     //mail($to, $subject, $message, $headers);
+});
+
+$app->get('/migrasi', function(){
+    $detail_jadwal = App\Models\DetailJadwal::all();
+    foreach($detail_jadwal as $row){
+        $pengajar_id = $row->jadwal->pengajar_id;
+        $row->pengajar_id = $pengajar_id;
+        $row->save();
+    }
 });

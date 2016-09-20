@@ -222,6 +222,7 @@ class JadwalController extends Controller
                 }
                 $detail_jadwal = new DetailJadwal();
                 $detail_jadwal->jadwal_id = $jadwal->id;
+                $detail_jadwal->pengajar_id = $pengajar->id;
                 $detail_jadwal->pertemuan = $i+1;
                 $detail_jadwal->tgl_pertemuan = date("Y-m-d",strtotime($request->input("tgl_pertemuan" . $i)));
                 $detail_jadwal->waktu_mulai = $request->input("waktu_pertemuan".$i);
@@ -324,7 +325,7 @@ class JadwalController extends Controller
     {
         $jadwal = Jadwal::find($request->input('jadwal_id'));
         foreach ($jadwal->detail_jadwal as $row){
-            $cekJadwal = $this->cekJadwalBentrok($row->tgl_pertemuan, $row->waktu_mulai, $row->waktu_selesai);
+            $cekJadwal = $this->cekJadwalBentrok($row->tgl_pertemuan, $row->waktu_mulai, $row->waktu_selesai, $jadwal->pengajar_id);
             if(count($cekJadwal)>0){
                 return response()->json([
                     'status'=>0,
@@ -368,7 +369,7 @@ class JadwalController extends Controller
         }
     }
 
-    public function cekJadwalBentrok($tgl,$waktu_mulai,$waktu_selesai)
+    public function cekJadwalBentrok($tgl,$waktu_mulai,$waktu_selesai,$pengajar_id)
     {
         $timestamp1 = strtotime($waktu_mulai) - 60*90;
         $timestamp2 = strtotime($waktu_selesai) + 60*90;
@@ -378,11 +379,12 @@ class JadwalController extends Controller
 
         $model = DB::select('SELECT 
                                     dj.*,j.status, s.fullname  
-                                FROM `tb_detail_jadwal` AS dj 
+                                FROM tb_detail_jadwal AS dj
                                 JOIN tb_jadwal AS j ON dj.jadwal_id = j.id 
                                 JOIN tb_siswa AS s ON j.siswa_id = s.id 
                                 WHERE 
-                                    j.status = 1 AND 
+                                    j.status = 1 AND
+                                    dj.pengajar_id = "'.$pengajar_id.'" AND
                                     dj.tgl_pertemuan = "'.$tgl.'" AND 
                                     waktu_mulai>"'.$waktu_mulai.'" AND 
                                     waktu_selesai<"'.$waktu_selesai.'"');
@@ -395,7 +397,7 @@ class JadwalController extends Controller
         $pengajar = $user->pengajar;
         $model = DB::select('SELECT 
                                     dj.*,
-                                    j.status,j.pengajar_id,
+                                    j.status,j.pengajar_id AS j_pengajar_id,
                                     s.fullname,s.photo,s.siswa_cp, 
                                     m.nama AS nama_mapel, 
                                     t.nama AS nama_tingkat, 
@@ -410,7 +412,7 @@ class JadwalController extends Controller
                                     dj.tgl_pertemuan = "'.date('Y-m-d').'" AND 
                                     h.id IS NULL AND 
                                     j.status = "1" AND 
-                                    j.pengajar_id = "'.$pengajar->id.'"
+                                    dj.pengajar_id = "'.$pengajar->id.'"
                                 ORDER BY tgl_pertemuan ASC, waktu_mulai ASC');
         if (count($model)>0){
             $data = array();
@@ -498,7 +500,7 @@ class JadwalController extends Controller
         $pengajar = $user->pengajar;
         $model = DB::select('SELECT 
                                     dj.*,
-                                    j.status,j.pengajar_id,
+                                    j.status,j.pengajar_id as j_pengajar_id,
                                     s.fullname,s.photo,s.siswa_cp, 
                                     m.nama AS nama_mapel, 
                                     t.nama AS nama_tingkat, 
@@ -512,7 +514,7 @@ class JadwalController extends Controller
                                 WHERE 
                                     h.id IS NOT NULL AND 
                                     j.status = "1" AND 
-                                    j.pengajar_id = "'.$pengajar->id.'"
+                                    dj.pengajar_id = "'.$pengajar->id.'"
                                 ORDER BY tgl_pertemuan ASC, waktu_mulai ASC');
         if (count($model)>0){
             $data = array();
@@ -544,7 +546,7 @@ class JadwalController extends Controller
         $pengajar = $user->pengajar;
         $model = DB::select('SELECT 
                                     dj.*,
-                                    j.status,j.pengajar_id,
+                                    j.status,j.pengajar_id AS j_pengajar_id,
                                     s.fullname,s.photo,s.siswa_cp, 
                                     m.nama AS nama_mapel, 
                                     t.nama AS nama_tingkat, 
@@ -558,7 +560,8 @@ class JadwalController extends Controller
                                 WHERE 
                                     h.id IS NULL AND 
                                     j.status = "1" AND 
-                                    j.pengajar_id = "'.$pengajar->id.'"
+                                    dj.pengajar_id = "'.$pengajar->id.'" AND
+                                    dj.tgl_pertemuan > "'.date("Y-m-d").'"
                                 ORDER BY tgl_pertemuan ASC, waktu_mulai ASC');
         if (count($model)>0){
             $data = array();
@@ -589,7 +592,7 @@ class JadwalController extends Controller
         $siswa = $user->siswa;
         $model = DB::select('SELECT 
                                     dj.*,
-                                    j.status,j.pengajar_id,j.siswa_id, 
+                                    j.status,j.pengajar_id AS j_pengajar_id,j.siswa_id,
                                     p.fullname,p.photo,p.pengajar_cp, 
                                     m.nama AS nama_mapel, 
                                     t.nama AS nama_tingkat, 
@@ -597,7 +600,7 @@ class JadwalController extends Controller
                                     pk.durasi 
                                 FROM tb_detail_jadwal AS dj 
                                 JOIN tb_jadwal AS j ON dj.jadwal_id=j.id 
-                                JOIN tb_pengajar AS p ON j.pengajar_id=p.id 
+                                JOIN tb_pengajar AS p ON dj.pengajar_id=p.id
                                 JOIN tb_mapel AS m ON j.mapel_id=m.id 
                                 JOIN tb_tingkat_pendidikan AS t ON m.tingkat_pendidikan=t.id 
                                 JOIN tb_paket AS pk ON j.paket_id=pk.id 
@@ -655,14 +658,15 @@ class JadwalController extends Controller
                                     h.id AS history_id 
                                 FROM tb_detail_jadwal AS dj 
                                 JOIN tb_jadwal AS j ON dj.jadwal_id=j.id 
-                                JOIN tb_pengajar AS p ON j.pengajar_id=p.id 
+                                JOIN tb_pengajar AS p ON dj.pengajar_id=p.id
                                 JOIN tb_mapel AS m ON j.mapel_id=m.id 
                                 JOIN tb_tingkat_pendidikan AS t ON m.tingkat_pendidikan=t.id 
                                 LEFT JOIN tb_history AS h ON h.detail_jadwal_id = dj.id 
                                 WHERE 
                                     h.id IS NULL AND 
                                     j.status = "1" AND 
-                                    j.siswa_id = "'.$siswa->id.'"
+                                    j.siswa_id = "'.$siswa->id.'" AND
+                                    dj.tgl_pertemuan >= "'.date("Y-m-d").'"
                                 ORDER BY tgl_pertemuan ASC, waktu_mulai ASC');
         if (count($model)>0){
             $data = array();
