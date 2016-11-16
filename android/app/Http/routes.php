@@ -101,6 +101,8 @@ $app->post('/rescheduleJadwal', ['as'=>'rescheduleJadwal', 'uses' => 'JadwalCont
 
 $app->post('/cancelJadwal', ['as'=>'cancelJadwal', 'uses' => 'JadwalController@cancelJadwal']);
 
+$app->get('/article/detail/{id}', ['as'=>'detailArticle', 'uses' => 'ArticleController@detail']);
+
 $app->get('/test', function(){
     return '<meta http-equiv="refresh" content="0; url=https://edukezy.com/verifikasi.php" />';
     //redirect("https://edukezy.com/verifikasi.php");

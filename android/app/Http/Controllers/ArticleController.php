@@ -28,5 +28,11 @@ class ArticleController extends Controller
 
     }
 
+    public function detail($id)
+    {
+        $article = Artikel::find($id);
+        return view('article', ['article' => $article]);
+    }
+
     //
 }
