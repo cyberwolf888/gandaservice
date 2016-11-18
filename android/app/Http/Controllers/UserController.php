@@ -35,19 +35,25 @@ class UserController extends Controller
         $user = User::where('email',$email)
             ->where('password',md5($password))
             ->where('type',$type)
-            ->where('status',1)
+            //->where('status',1)
             ->first();
         if($user && count($user)>0){
             if($user->type == User::SISWA){
+                if($user->status==0){
+                    return response()->json(['status'=>0,'error'=>'Login gagal. Account anda belum aktif.']);
+                }
                 $siswa = $user->siswa;
                 return response()->json(['status'=>1,'data'=>$siswa]);
             }
             if($user->type == User::PENGAJAR){
+                if($user->status==0){
+                    return response()->json(['status'=>0,'error'=>'Login gagal. Account anda belum aktif atau belum lolos seleksi.']);
+                }
                 $pengajar = $user->pengajar;
                 return response()->json(['status'=>1,'data'=>$pengajar]);
             }
         }else{
-            return response()->json(['status'=>0]);
+            return response()->json(['status'=>0,'error'=>'Login gagal. Email atau Password salah.']);
         }
     }
 
@@ -57,56 +63,68 @@ class UserController extends Controller
         $pengajar = Pengajar::where('pengajar_cp',$request->input('telp'))->count();
 
         if($user == 0 && $pengajar == 0){
-            //$cabang = Cabang::where('nama',$request->input('zona'))->first();
-            $model = new User();
-            $mPengajar = new Pengajar();
+            $alamat = $this->geocoding_alamat($request->input('alamat').", ".$request->input('kodepos'));
+            if($alamat['status']=="OK"){
 
-            $model->email = $request->input('email');
-            $model->password = md5($request->input('password'));
-            $model->status = 3;
-            $model->type = User::PENGAJAR;
-            $model->token = md5($request->input('email'));
-            if($model->save()){
-                $mPengajar->user_id = $model->id;
-                //$mPengajar->zona_id = $cabang->id;
-                $mPengajar->fullname = ucfirst($request->input('nama'));
-                $mPengajar->pengajar_alamat = $request->input('alamat');
-                $mPengajar->pengajar_cp = $request->input('telp');
-                $mPengajar->pengajar_pendidikan = $request->input('edukasi');
-                $mPengajar->status_mengajar = Pengajar::AVALAIBLE;
-                if($mPengajar->save()){
-                    if($request->input('jumlah_prestasi')>0){
-                        for($i=1; $i<=$request->input('jumlah_prestasi'); $i++){
-                            $prestasi = new PrestasiPengajar();
-                            $prestasi->pengajar_id = $mPengajar->id;
-                            $prestasi->prestasi = $request->input('prestasi'.$i);
-                            $prestasi->save();
+                $latitude = $alamat['results'][0]['geometry']['location']['lat'];
+                $longitude = $alamat['results'][0]['geometry']['location']['lng'];
+
+                //$cabang = Cabang::where('nama',$request->input('zona'))->first();
+                $model = new User();
+                $mPengajar = new Pengajar();
+
+                $model->email = $request->input('email');
+                $model->password = md5($request->input('password'));
+                $model->status = 3;
+                $model->type = User::PENGAJAR;
+                $model->token = md5($request->input('email'));
+                if($model->save()){
+                    $mPengajar->user_id = $model->id;
+                    //$mPengajar->zona_id = $cabang->id;
+                    $mPengajar->fullname = ucfirst($request->input('nama'));
+                    $mPengajar->pengajar_alamat = $request->input('alamat');
+                    $mPengajar->kodepos = $request->input('kodepos');
+                    $mPengajar->latitude = $latitude;
+                    $mPengajar->longitude = $longitude;
+                    $mPengajar->pengajar_cp = $request->input('telp');
+                    $mPengajar->pengajar_pendidikan = $request->input('edukasi');
+                    $mPengajar->status_mengajar = Pengajar::AVALAIBLE;
+                    if($mPengajar->save()){
+                        if($request->input('jumlah_prestasi')>0){
+                            for($i=1; $i<=$request->input('jumlah_prestasi'); $i++){
+                                $prestasi = new PrestasiPengajar();
+                                $prestasi->pengajar_id = $mPengajar->id;
+                                $prestasi->prestasi = $request->input('prestasi'.$i);
+                                $prestasi->save();
+                            }
                         }
+                        //$msg = 'Klik <a href="'.route('activation',['token'=>$model->token]).'">disini</a> atau tautan berikut untuk verifikasi email anda: \n'.route('activation',['token'=>$model->token]);
+                        //$msg = wordwrap($msg,70);
+                        //mail($request->input('email'),"Ganda Edukasi - Account Activation",$msg);
+                        $to = $request->input('email');
+                        $subject = 'Edukezy - Account Activation';
+                        $from = 'info@edukezy.com/';
+
+                        $headers  = 'MIME-Version: 1.0' . "\r\n";
+                        $headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
+                        $headers .= 'From: '.$from."\r\n".
+                            'Reply-To: '.$from."\r\n" .
+                            'X-Mailer: PHP/' . phpversion();
+
+                        $message = '<html><body>';
+                        $message .= '<h3 style="color:#000000;">Hi '.$mPengajar->fullname.'!</h3>';
+                        $message .= '<p style="color:#000000;font-size:18px;">Klik <a href="'.route('activation',['token'=>$model->token]).'">disini</a> atau tautan berikut untuk verifikasi email anda: '.route('activation',['token'=>$model->token]).'</p>';
+                        $message .= '</body></html>';
+
+                        mail($to, $subject, $message, $headers);
+                        return response()->json(['status'=>1]);
                     }
-                    //$msg = 'Klik <a href="'.route('activation',['token'=>$model->token]).'">disini</a> atau tautan berikut untuk verifikasi email anda: \n'.route('activation',['token'=>$model->token]);
-                    //$msg = wordwrap($msg,70);
-                    //mail($request->input('email'),"Ganda Edukasi - Account Activation",$msg);
-                    $to = $request->input('email');
-                    $subject = 'Edukezy - Account Activation';
-                    $from = 'info@edukezy.com/';
-
-                    $headers  = 'MIME-Version: 1.0' . "\r\n";
-                    $headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
-                    $headers .= 'From: '.$from."\r\n".
-                        'Reply-To: '.$from."\r\n" .
-                        'X-Mailer: PHP/' . phpversion();
-
-                    $message = '<html><body>';
-                    $message .= '<h3 style="color:#000000;">Hi '.$mPengajar->fullname.'!</h3>';
-                    $message .= '<p style="color:#000000;font-size:18px;">Klik <a href="'.route('activation',['token'=>$model->token]).'">disini</a> atau tautan berikut untuk verifikasi email anda: '.route('activation',['token'=>$model->token]).'</p>';
-                    $message .= '</body></html>';
-
-                    mail($to, $subject, $message, $headers);
-                    return response()->json(['status'=>1]);
                 }
+            }else{
+                return response()->json(['status'=>0,'error'=>'Gagal registrasi. Alamat anda tidak ditemukan.']);
             }
         }else{
-            return response()->json(['status'=>0]);
+            return response()->json(['status'=>0,'error'=>'Gagal registrasi. Email atau No. Telp anda sudah digunakan.']);
         }
 
     }
@@ -117,7 +135,7 @@ class UserController extends Controller
         $siswa = Siswa::where('siswa_cp',$request->input('telp'))->count();
         if($user == 0 && $siswa == 0){
             //cek lat & long siswa
-            $alamat = $this->geocoding_alamat($request->input('alamat'));
+            $alamat = $this->geocoding_alamat($request->input('alamat').", ".$request->input('kodepos'));
             if($alamat['status']=="OK"){
                 $latitude = $alamat['results'][0]['geometry']['location']['lat'];
                 $longitude = $alamat['results'][0]['geometry']['location']['lng'];
@@ -142,6 +160,7 @@ class UserController extends Controller
                         $mSiswa->longitude = $longitude;
                         $mSiswa->fullname = ucfirst($request->input('nama'));
                         $mSiswa->alamat = $request->input('alamat');
+                        $mSiswa->kodepos = $request->input('kodepos');
                         $mSiswa->tempat_lahir = ucfirst($request->input('tempat_lahir'));
                         $mSiswa->tgl_lahir = $request->input('tgl_lahir');
                         $mSiswa->siswa_cp = $request->input('telp');
@@ -222,6 +241,9 @@ class UserController extends Controller
         if($user && count($user)>0){
             $pengajar = $user->pengajar;
             $isNewAccount = 0;
+            if($pengajar->kodepos == null){
+                return response()->json(['status'=>2,'isNewAccount'=>$isNewAccount]);
+            }
             $tingkat_pengajar = TingkatPendidikanPengajar::where('pengajar_id',$pengajar->id)->count();
             $mapel_pengajar = MapelPengajar::where('pengajar_id',$pengajar->id)->count();
             if($tingkat_pengajar == 0 && $mapel_pengajar == 0){
@@ -460,6 +482,32 @@ class UserController extends Controller
         $notif = Notif::where('user_id',$request->input('user_id'))->first();
         if(count($notif)>0){
             $notif->delete();
+        }
+    }
+
+    public function verifyAlamat(Request $request)
+    {
+        $user_id = $request->input('user_id');
+        $user = User::find($user_id);
+        $pengajar = $user->pengajar;
+
+        $alamat = $this->geocoding_alamat($request->input('alamat').", ".$request->input('kodepos'));
+        if($alamat['status']=="OK"){
+            $latitude = $alamat['results'][0]['geometry']['location']['lat'];
+            $longitude = $alamat['results'][0]['geometry']['location']['lng'];
+
+            $pengajar->pengajar_alamat = $request->input('alamat');
+            $pengajar->kodepos = $request->input('kodepos');
+            $pengajar->latitude = $latitude;
+            $pengajar->longitude = $longitude;
+
+            if($pengajar->save()){
+                return response()->json(['status'=>1]);
+            }else{
+                return response()->json(['status'=>0,'error'=>'Verifikasi alamat gagal.']);
+            }
+        }else{
+            return response()->json(['status'=>0,'error'=>'Verifikasi alamat gagal. Alamat tidak ditemukan.']);
         }
     }
     //
