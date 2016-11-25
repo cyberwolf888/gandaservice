@@ -26,7 +26,7 @@ class ProgramEdukasiController extends Controller
             $i=0;
             foreach ($model as $row){
                 $data[$i] = $row;
-                $data[$i]['label_biaya'] = number_format($row->biaya, 0, ',', '.');
+                $data[$i]['label_biaya'] = $row->biaya;
                 $i++;
             }
             return response()->json(['status'=>1,'data'=>$data]);

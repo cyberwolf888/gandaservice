@@ -4,12 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Cabang;
 use App\Models\Mapel;
+use App\Models\MapelCalonPengajar;
 use App\Models\MapelPengajar;
 use App\Models\Notif;
 use App\Models\Pengajar;
 use App\Models\PrestasiPengajar;
 use App\Models\Siswa;
 use App\Models\TingkatPendidikan;
+use App\Models\TingkatPendidikanCalonPengajar;
 use App\Models\TingkatPendidikanPengajar;
 use App\User;
 use Illuminate\Http\Request;
@@ -96,6 +98,22 @@ class UserController extends Controller
                                 $prestasi->pengajar_id = $mPengajar->id;
                                 $prestasi->prestasi = $request->input('prestasi'.$i);
                                 $prestasi->save();
+                            }
+                        }
+                        if($request->input('jumlah_mapel')>0){
+                            for($i=1; $i<=$request->input('jumlah_mapel'); $i++){
+                                $mapel = new MapelCalonPengajar();
+                                $mapel->pengajar_id = $mPengajar->id;
+                                $mapel->mapel = $request->input('mapel'.$i);
+                                $mapel->save();
+                            }
+                        }
+                        if($request->input('jumlah_pendidikan')>0){
+                            for($i=1; $i<=$request->input('jumlah_pendidikan'); $i++){
+                                $tingkatpendidikan = new TingkatPendidikanCalonPengajar();
+                                $tingkatpendidikan->pengajar_id = $mPengajar->id;
+                                $tingkatpendidikan->tingkat_pendidikan = $request->input('pendidikan'.$i);
+                                $tingkatpendidikan->save();
                             }
                         }
                         //$msg = 'Klik <a href="'.route('activation',['token'=>$model->token]).'">disini</a> atau tautan berikut untuk verifikasi email anda: \n'.route('activation',['token'=>$model->token]);
@@ -223,9 +241,11 @@ class UserController extends Controller
             $min = 9999999999;
             $value = array();
             foreach ($elements as $key=>$row){
-                if($row['distance']['value']<$min){
-                    $value = $cabang[$key];
-                    $min = $row['distance']['value'];
+                if($row['status']=="OK"){
+                    if($row['distance']['value']<$min){
+                        $value = $cabang[$key];
+                        $min = $row['distance']['value'];
+                    }
                 }
             }
             return $value;
@@ -246,7 +266,7 @@ class UserController extends Controller
             }
             $tingkat_pengajar = TingkatPendidikanPengajar::where('pengajar_id',$pengajar->id)->count();
             $mapel_pengajar = MapelPengajar::where('pengajar_id',$pengajar->id)->count();
-            if($tingkat_pengajar == 0 && $mapel_pengajar == 0){
+            if($tingkat_pengajar == 0 || $mapel_pengajar == 0 || $pengajar->zona_id == null){
                 $isNewAccount=1;
             }
             return response()->json(['status'=>1,'isNewAccount'=>$isNewAccount]);
@@ -310,6 +330,8 @@ class UserController extends Controller
         }
 
         if($success){
+            $pengajar->zona_id = $request->input('zona_id');
+            $pengajar->save();
             return response()->json(['status'=>1]);
         }else{
             return response()->json(['status'=>0]);
@@ -510,5 +532,6 @@ class UserController extends Controller
             return response()->json(['status'=>0,'error'=>'Verifikasi alamat gagal. Alamat tidak ditemukan.']);
         }
     }
+
     //
 }

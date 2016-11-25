@@ -22,6 +22,7 @@ use App\Models\Paket;
 use App\Models\Pembayaran;
 use App\Models\Pengajar;
 use App\Models\Rating;
+use App\Models\Siswa;
 use App\Models\Tarif;
 use App\Models\TingkatPendidikanPengajar;
 use App\User;
@@ -170,7 +171,13 @@ class JadwalController extends Controller
 
     public function getPaket(Request $request)
     {
-        $paket = Paket::with('tarif')->get();
+        $user = User::find($request->input('user_id'));
+        $siswa = $user->siswa;
+        $pengajar = Pengajar::find($request->input('pengajar_id'));
+        $paket = Paket::with('tarif')->where('tingkat_pendidikan',$siswa->siswa_pendidikan)->get();
+        $rating = $pengajar->getRating();
+        $bonus = Tarif::getTarifByRate($rating);
+
         if(count($paket)>0){
             $data = array();
             $i = 0;
@@ -181,7 +188,12 @@ class JadwalController extends Controller
                 $data[$i]['jumlah_pertemuan'] = $row->jumlah_pertemuan;
                 $data[$i]['durasi'] = $row->durasi;
                 $data[$i]['harga'] = $row->tarif->harga;
-                $data[$i]['label_harga'] = number_format($row->tarif->harga, 0, ',', '.');
+                $data[$i]['bonus'] = $bonus;
+                $data[$i]['total'] = $row->tarif->harga+$bonus;
+                $data[$i]['rating'] = $rating;
+                $data[$i]['label_harga'] = "Harga Paket: ".number_format($row->tarif->harga, 0, ',', '.');
+                $data[$i]['label_bonus'] = $bonus == 0 ? "Tarif Pengajar Rating $rating : GRATIS" : "Tarif Pengajar Rating $rating : Rp. ".number_format($bonus, 0, ',', '.');
+                $data[$i]['label_total'] = "Total : Rp.".number_format($row->tarif->harga+$bonus, 0, ',', '.');
                 $i++;
             }
             return response()->json(['status'=>1,'data'=>$data]);
@@ -340,13 +352,19 @@ class JadwalController extends Controller
         }
         $jadwal->status = 1;
         if($jadwal->save()){
+            $pengajar = Pengajar::find($jadwal->pengajar_id);
+            $paket = Paket::find($jadwal->paket_id);
+            $rating = $pengajar->getRating();
+            $bonus = Tarif::getTarifByRate($rating);
+
             $pembayaran = new Pembayaran();
             $pembayaran->siswa_id = $jadwal->siswa_id;
             $pembayaran->jadwal_id = $jadwal->id;
             $pembayaran->jenis_tagihan = Pembayaran::PROGRAM;
-            $pembayaran->jumlah = $jadwal->paket->tarif->harga;
+            $pembayaran->jumlah = $jadwal->paket->tarif->harga+$bonus;
             $pembayaran->pembayaran_metode = Pembayaran::CASH;
             $pembayaran->pembayaran_status = Pembayaran::PROSES;
+            $pembayaran->keterangan = "Pemabayaran paket ".$paket->nama." dan pengajar dengan rating ".$rating;
             if($pembayaran->save()){
                 //notifikasi ke siswa jadwal ditererima dan pembayaran
                 $notif = Notif::where('user_id',$jadwal->siswa->user_id)->first();
@@ -436,6 +454,26 @@ class JadwalController extends Controller
         }
     }
 
+    private function hitungJarak($latOri,$longOri,$latDes,$longDes){
+        $key = env("DISTANCE_MATRIX_KEY");
+        $url = "https://maps.googleapis.com/maps/api/distancematrix/json?origins=$latOri,$longOri&destinations=$latDes,$longDes&mode=driving&language=id&key=$key";
+        $result = json_decode(file_get_contents($url),true);
+        if($result['status']=="OK"){
+            if($result['rows'][0]['elements'][0]['status'] == "OK"){
+                return $result['rows'][0]['elements'][0]['distance']['value'];
+            }else{
+                return 0;
+            }
+
+        }
+    }
+
+    public function testHitungJarak(){
+        $jarak = $this->hitungJarak("-8.647446", "115.233205", "-8.651975","115.237289");
+        //return ;
+        return Tarif::where('tipe','T3')->where('keterangan','1')->first()->harga*round($jarak/100, 0, PHP_ROUND_HALF_UP);
+    }
+
     public function createHistory(Request $request){
         $jadwal = Jadwal::find($request->input('jadwal_id'));
         $detail = DetailJadwal::find($request->input('detail_jadwal_id'));
@@ -462,9 +500,11 @@ class JadwalController extends Controller
             //bayar kelebihan jam
             if($model->tambahan_jam>0){
                 $pengajar = Pengajar::find($model->pengajar_id);
-                $rating = $pengajar->getRating();
-                $lebih = round($model->tambahan_jam/15, 0, PHP_ROUND_HALF_UP);
-                $tarif = Tarif::getTarifByRate($rating);
+                $siswa = Siswa::find($model->siswa_id);
+                //$rating = $pengajar->getRating();
+                $lebih = round($model->tambahan_jam/5, 0, PHP_ROUND_HALF_UP);
+                //$tarif = Tarif::getTarifByRate($rating);
+                $tarif = 3000;
                 $biaya = $tarif*$lebih;
                 $pembayaran = new Pembayaran();
                 $pembayaran->siswa_id = $model->siswa_id;
@@ -473,9 +513,36 @@ class JadwalController extends Controller
                 $pembayaran->jadwal_id = $jadwal->id;
                 $pembayaran->jenis_tagihan = Pembayaran::JADWAL;
                 $pembayaran->jumlah = $biaya;
+                $pembayaran->keterangan = "Kelebihan ".$lebih." menit.";
                 $pembayaran->pembayaran_metode = Pembayaran::CASH;
                 $pembayaran->pembayaran_status = Pembayaran::PROSES;
                 $pembayaran->save();
+
+                //tagihan jarak jika zona siswa dan pengajar berbeda
+                if($pengajar->zona_id != $siswa->zona_id){
+                    $cabang = Cabang::find($pengajar->zona_id);
+                    $jarak = $this->hitungJarak($cabang->latitude, $cabang->longitude, $siswa->latitude,$siswa->longitude);
+                    $jarak = round($jarak/100, 0, PHP_ROUND_HALF_UP);
+
+                    //tambahkan tagihan jarak jika lebih dari 10km
+                    if($jarak>10){
+                        //$tarif = Tarif::where('tipe','T3')->where('keterangan','1')->first()->harga;
+                        $tarif = 1000;
+                        $total = $tarif*$jarak;
+                        $pembayaran = new Pembayaran();
+                        $pembayaran->siswa_id = $model->siswa_id;
+                        $pembayaran->pengajar_id = $model->pengajar_id;
+                        $pembayaran->history_id = $model->id;
+                        $pembayaran->jadwal_id = $jadwal->id;
+                        $pembayaran->jenis_tagihan = Pembayaran::JARAK;
+                        $pembayaran->jumlah = $total;
+                        $pembayaran->keterangan = "Biaya jarak tempuh ".$jarak." km.";
+                        $pembayaran->pembayaran_metode = Pembayaran::CASH;
+                        $pembayaran->pembayaran_status = Pembayaran::PROSES;
+                        $pembayaran->save();
+                    }
+
+                }
             }
 
             //notifikasi ke siswa ada pembayaran jadwal
@@ -487,6 +554,7 @@ class JadwalController extends Controller
                 $onesignal->message = "Ada history pertemuan baru.";
                 $onesignal->sendMessageTo([$notif->onesignal_id]);
             }
+
             return response()->json(['status'=>1]);
         }else{
             return response()->json(['status'=>0,'error'=>'Gagal menyimpan data.']);

@@ -48,10 +48,15 @@ class PembayaranController extends Controller
                     $data[$i]['cost'] = number_format($row->jumlah,0,',','.');
                 }elseif($row->jenis_tagihan == Pembayaran::JADWAL){
                     $jadwal = Jadwal::where('id',$row->jadwal_id)->with('mapel.tingkat')->first();
-                    $history = History::find($row->history_id);
                     $data[$i]['id'] = $row->id;
                     $data[$i]['title'] = $jadwal->mapel->nama." - ".$jadwal->mapel->tingkat->nama;
-                    $data[$i]['keterangan'] = "Kelebihan ".$history->tambahan_jam." menit";
+                    $data[$i]['keterangan'] = $row->keterangan;
+                    $data[$i]['cost'] = number_format($row->jumlah,0,',','.');
+                }elseif($row->jenis_tagihan == Pembayaran::JARAK){
+                    $jadwal = Jadwal::where('id',$row->jadwal_id)->with('mapel.tingkat')->first();
+                    $data[$i]['id'] = $row->id;
+                    $data[$i]['title'] = $jadwal->mapel->nama." - ".$jadwal->mapel->tingkat->nama;
+                    $data[$i]['keterangan'] = $row->keterangan;
                     $data[$i]['cost'] = number_format($row->jumlah,0,',','.');
                 }
                 $i++;

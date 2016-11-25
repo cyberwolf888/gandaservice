@@ -17,7 +17,7 @@
             <?php if($article->cover != ''): ?>
                 <img src="<?= 'https://www.edukezy.com/images/article/'.$article->cover ?>" class="img-responsive">
             <?php else: ?>
-                <img src="https://www.edukezy.com/images/logo.png" class="img-responsive">
+                <!-- <img src="https://www.edukezy.com/images/logo.png" class="img-responsive"> -->
             <?php endif; ?>
             </center>
         </div>

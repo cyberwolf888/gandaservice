@@ -105,6 +105,8 @@ $app->get('/article/detail/{id}', ['as'=>'detailArticle', 'uses' => 'ArticleCont
 
 $app->post('/verifyalamat', ['as'=>'verifyAlamat', 'uses' => 'UserController@verifyAlamat']);
 
+$app->post('/testJarak', ['uses' => 'JadwalController@testHitungJarak']);
+
 $app->get('/test', function(){
     return '<meta http-equiv="refresh" content="0; url=https://edukezy.com/verifikasi.php" />';
     //redirect("https://edukezy.com/verifikasi.php");

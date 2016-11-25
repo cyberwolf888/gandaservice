@@ -13,6 +13,7 @@ class Pembayaran extends Model
      */
     const PROGRAM = 'PROGRAM';
     const JADWAL = 'JADWAL';
+    const JARAK = 'JARAK';
     const CASH = '1';
     const TRANSFER_BANK = '2';
     const PROSES = '1';
