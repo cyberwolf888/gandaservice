@@ -578,11 +578,10 @@ class JadwalController extends Controller
                                 JOIN tb_siswa AS s ON j.siswa_id=s.id 
                                 JOIN tb_mapel AS m ON j.mapel_id=m.id 
                                 JOIN tb_tingkat_pendidikan AS t ON m.tingkat_pendidikan=t.id 
-                                LEFT JOIN tb_history AS h ON h.detail_jadwal_id = dj.id 
+                                JOIN tb_history AS h ON h.detail_jadwal_id = dj.id 
                                 WHERE 
-                                    h.id IS NOT NULL AND 
                                     j.status = "1" AND 
-                                    dj.pengajar_id = "'.$pengajar->id.'"
+                                    h.pengajar_id = "'.$pengajar->id.'"
                                 ORDER BY tgl_pertemuan ASC, waktu_mulai ASC');
         if (count($model)>0){
             $data = array();

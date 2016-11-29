@@ -121,7 +121,7 @@ class UserController extends Controller
                         //mail($request->input('email'),"Ganda Edukasi - Account Activation",$msg);
                         $to = $request->input('email');
                         $subject = 'Edukezy - Account Activation';
-                        $from = 'info@edukezy.com/';
+                        $from = 'info@edukezy.com';
 
                         $headers  = 'MIME-Version: 1.0' . "\r\n";
                         $headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
@@ -530,6 +530,52 @@ class UserController extends Controller
             }
         }else{
             return response()->json(['status'=>0,'error'=>'Verifikasi alamat gagal. Alamat tidak ditemukan.']);
+        }
+    }
+
+    public function formResetPassword()
+    {
+       return view('resetpassword');
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $email = $request->input('email');
+        $user = User::where('email',$email)->first();
+        if($user==null){
+            return view('resetpassword',['error'=>'Alamat email anda tidak ditemukan.']);
+        }else{
+            $token =  md5(microtime());
+            $user->token = $token;
+            $user->save();
+
+            $to = $request->input('email');
+            $subject = 'Edukezy - Reset Password';
+            $from = 'info@edukezy.com';
+
+            $headers  = 'MIME-Version: 1.0' . "\r\n";
+            $headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
+            $headers .= 'From: '.$from."\r\n".
+                'Reply-To: '.$from."\r\n" .
+                'X-Mailer: PHP/' . phpversion();
+
+            $message = '<html><body>';
+            $message .= '<h3 style="color:#000000;">Hi '.$email.'!</h3>';
+            $message .= '<p style="color:#000000;font-size:18px;">Klik <a href="'.route('verifyToken',['token'=>$token]).'">disini</a> atau tautan berikut untuk mereset password anda: '.route('verifyToken',['token'=>$token]).'</p>';
+            $message .= '</body></html>';
+
+            mail($to, $subject, $message, $headers);
+            return view('resetpassword',['success'=>'Silahkan cek inbox email anda untuk langkah selanjutnya.']);
+        }
+    }
+
+    public function verifyToken($token)
+    {
+        $user = User::where('token',$token)->first();
+        if($user==null){
+            return view('resetpassword',['error'=>'Akun anda tidak ditemukan atau tidak aktif.']);
+        }else{
+
         }
     }
 
