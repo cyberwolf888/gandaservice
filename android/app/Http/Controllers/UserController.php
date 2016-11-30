@@ -30,6 +30,9 @@ class UserController extends Controller
 
     public function login(Request $request)
     {
+        if($request->input('version')==null){
+            return response()->json(['status'=>0,'error'=>'Login gagal. Versi aplikasi masih lama. Harap update aplikasi pada playstore.']);
+        }
         $email = $request->input('email');
         $password = $request->input('password');
         $type = $request->input('type');
@@ -41,6 +44,9 @@ class UserController extends Controller
             ->first();
         if($user && count($user)>0){
             if($user->type == User::SISWA){
+                if($request->input('version')!="6.0"){
+                    return response()->json(['status'=>0,'error'=>'Login gagal. Versi aplikasi masih lama. Harap update aplikasi pada playstore.']);
+                }
                 if($user->status==0){
                     return response()->json(['status'=>0,'error'=>'Login gagal. Account anda belum aktif.']);
                 }
@@ -48,6 +54,9 @@ class UserController extends Controller
                 return response()->json(['status'=>1,'data'=>$siswa]);
             }
             if($user->type == User::PENGAJAR){
+                if($request->input('version')!="7.0"){
+                    return response()->json(['status'=>0,'error'=>'Login gagal. Versi aplikasi masih lama. Harap update aplikasi pada playstore.']);
+                }
                 if($user->status==0){
                     return response()->json(['status'=>0,'error'=>'Login gagal. Account anda belum aktif atau belum lolos seleksi.']);
                 }
@@ -256,6 +265,10 @@ class UserController extends Controller
 
     public function cekProfilePengajar(Request $request)
     {
+        if($request->input('version')==null){
+            return response()->json(['status'=>0,'error'=>'Login gagal. Versi aplikasi masih lama. Harap update aplikasi pada playstore.']);
+        }
+
         $user_id = $request->input('user_id');
         $user = User::find($user_id);
         if($user && count($user)>0){
@@ -549,7 +562,7 @@ class UserController extends Controller
             $user->token = $token;
             $user->save();
 
-            $to = $request->input('email');
+            $to = 'wijaya.imd@gmail.com';//$request->input('email');
             $subject = 'Edukezy - Reset Password';
             $from = 'info@edukezy.com';
 
@@ -575,7 +588,25 @@ class UserController extends Controller
         if($user==null){
             return view('resetpassword',['error'=>'Akun anda tidak ditemukan atau tidak aktif.']);
         }else{
+            return view('newpassword',['token'=>$token]);
+        }
+    }
 
+    public function setPassword(Request $request)
+    {
+        $password = $request->input('password');
+        $confirm_password = $request->input('confirm_password');
+        $token = $request->input('token');
+        if(strlen($password)<4){
+            return view('newpassword',['token'=>$token,'error'=>'Panjang password menimal 4 karakter.']);
+        } elseif ($password == $confirm_password){
+            $user = User::where('token',$token)->first();
+            $user->token = null;
+            $user->password = md5($password);
+            $user->save();
+            return view('passwordsuccess',['success'=>'Password account anda berhasil dirubah, silahkan login kembali pada aplikasi.']);
+        } else{
+            return view('newpassword',['token'=>$token,'error'=>'Password tidak cocok dengan konfirmasi password.']);
         }
     }
 

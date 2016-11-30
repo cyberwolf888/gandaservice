@@ -28,6 +28,14 @@
             <?= $article->content ?>
         </div>
     </div>
+    <div class="row">
+        <div class="col-xs-12" style="font-family: 'Roboto', sans-serif;color: #FFFFFF;">
+            <p><i><b>Author: </b> <?= $article->author ?></i></p>
+            <?php if($article->sumber != null): ?>
+            <p><i><b>Sumber: </b> <?= $article->sumber ?></i></p>
+            <?php endif; ?>
+        </div>
+    </div>
 </div>
 
 </body>

@@ -108,6 +108,7 @@ $app->post('/verifyalamat', ['as'=>'verifyAlamat', 'uses' => 'UserController@ver
 $app->get('/resetpassword', ['uses' => 'UserController@formResetPassword']);
 $app->post('/prosesresetpassword', ['uses' => 'UserController@resetPassword']);
 $app->get('/resetpassword/{token}', ['as'=>'verifyToken','uses' => 'UserController@verifyToken']);
+$app->post('/setPassword', ['as'=>'setPassword','uses' => 'UserController@setPassword']);
 
 $app->get('/test', function(){
     return '<meta http-equiv="refresh" content="0; url=https://edukezy.com/verifikasi.php" />';

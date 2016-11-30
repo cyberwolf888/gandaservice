@@ -9,17 +9,17 @@
     <div class="row">
         <div class="col-xs-12" style="font-family: 'Roboto', sans-serif;color: #FFFFFF; margin-top: 20px;">
             <p style="font-size: 16px;">
-                Silahkan masukan alamat email anda saat register.
+                Silahkan masukan password baru anda.
             </p>
         </div>
     </div>
 
     <?php if (isset($success)): ?>
-    <div class="row">
-        <div class="col-xs-12">
-            <div class="alert alert-success" role="alert"><?= $success ?></div>
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="alert alert-success" role="alert"><?= $success ?></div>
+            </div>
         </div>
-    </div>
     <?php endif; ?>
 
     <?php if (isset($error)): ?>
@@ -32,11 +32,16 @@
 
     <div class="row">
         <div class="col-xs-12">
-            <form action="<?= url('prosesresetpassword') ?>" role="form" method="POST">
+            <form action="<?= url('setPassword') ?>" role="form" method="POST">
                 <div class="form-group">
-                    <label for="exampleInputEmail1" style="color: white;">Email address</label>
-                    <input name="email" type="email" class="form-control" placeholder="Email" required autofocus>
+                    <label style="color: white;">New Password</label>
+                    <input name="password" type="password" class="form-control" placeholder="Password" required autofocus>
                 </div>
+                <div class="form-group">
+                    <label style="color: white;">Confirm Password</label>
+                    <input name="confirm_password" type="password" class="form-control" placeholder="Confirm Password" required>
+                </div>
+                <input type="hidden" name="token" value="<?= $token ?>">
                 <button type="submit" class="btn btn-default" style="width: 100%;">Submit</button>
             </form>
         </div>
