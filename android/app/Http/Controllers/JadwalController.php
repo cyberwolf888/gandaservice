@@ -124,7 +124,7 @@ class JadwalController extends Controller
                 if($cekJadwal>0){
                     continue;
                 }
-                if($row->pengajar->user->status == 1 /*&& $row->pengajar->zona_id == $siswa->zona_id*/){
+                if($row->pengajar->user->status == 1 && $row->pengajar->zona_id != null){
                     $cabang = Cabang::find($row->pengajar->zona_id);
                     $data[$i]['pengajar_id'] = $row->pengajar->id;
                     $data[$i]['mapel_id'] = $mapel_id;
@@ -155,7 +155,7 @@ class JadwalController extends Controller
                 $tingkat_pengajar.=$tingkat->tingkat_pendidikan->nama.", ";
             }
             foreach ($mapel as $row){
-                $lecture.=$row->mapel->nama.", ";
+                $lecture.=$row->mapel->nama."-".$row->mapel->tingkat->nama.", ";
             }
             $lecture = substr($lecture, 0, -2);
             $tingkat_pengajar = substr($tingkat_pengajar, 0, -2);
@@ -513,7 +513,7 @@ class JadwalController extends Controller
                 $pembayaran->jadwal_id = $jadwal->id;
                 $pembayaran->jenis_tagihan = Pembayaran::JADWAL;
                 $pembayaran->jumlah = $biaya;
-                $pembayaran->keterangan = "Kelebihan ".$lebih." menit.";
+                $pembayaran->keterangan = "Kelebihan ".$model->tambahan_jam." menit.";
                 $pembayaran->pembayaran_metode = Pembayaran::CASH;
                 $pembayaran->pembayaran_status = Pembayaran::PROSES;
                 $pembayaran->save();
@@ -528,7 +528,7 @@ class JadwalController extends Controller
                     if($jarak>10){
                         //$tarif = Tarif::where('tipe','T3')->where('keterangan','1')->first()->harga;
                         $tarif = 1000;
-                        $total = $tarif*$jarak;
+                        $total = $tarif*($jarak-10);
                         $pembayaran = new Pembayaran();
                         $pembayaran->siswa_id = $model->siswa_id;
                         $pembayaran->pengajar_id = $model->pengajar_id;
@@ -580,7 +580,6 @@ class JadwalController extends Controller
                                 JOIN tb_tingkat_pendidikan AS t ON m.tingkat_pendidikan=t.id 
                                 JOIN tb_history AS h ON h.detail_jadwal_id = dj.id 
                                 WHERE 
-                                    j.status = "1" AND 
                                     h.pengajar_id = "'.$pengajar->id.'"
                                 ORDER BY tgl_pertemuan ASC, waktu_mulai ASC');
         if (count($model)>0){
@@ -674,7 +673,6 @@ class JadwalController extends Controller
                                 LEFT JOIN tb_history AS h ON h.detail_jadwal_id = dj.id 
                                 WHERE 
                                     h.id IS NOT NULL AND 
-                                    j.status = "1" AND 
                                     j.siswa_id = "'.$siswa->id.'"
                                 ORDER BY tgl_pertemuan ASC, waktu_mulai ASC');
         if (count($model)>0){
@@ -693,12 +691,11 @@ class JadwalController extends Controller
                 $data[$i]['pertemuan'] = $row->pertemuan;
                 $data[$i]['keterangan'] = $row->history_keterangan;
                 $data[$i]['tambahan_jam'] = $row->tambahan_jam;
-                $data[$i]['durasi'] = $row->durasi+$row->tambahan_jam;
+                $data[$i]['durasi'] = $row->tambahan_jam;
                 if($row->tambahan_jam>0){
-                    $pengajar = Pengajar::find($row->pengajar_id);
-                    $rating = $pengajar->getRating();
-                    $lebih = round($row->tambahan_jam/15, 0, PHP_ROUND_HALF_UP);
-                    $tarif = Tarif::getTarifByRate($rating);
+                    $lebih = round($row->tambahan_jam/5, 0, PHP_ROUND_HALF_UP);
+                    //$tarif = Tarif::getTarifByRate($rating);
+                    $tarif = 3000;
                     $biaya = $tarif*$lebih;
                     $data[$i]['biaya'] = number_format($biaya, 0, ',', '.');
                 }else{

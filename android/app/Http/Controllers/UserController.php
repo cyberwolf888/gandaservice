@@ -18,6 +18,9 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
+    public $v_teacher = "8.0";
+    public $v_student = "7.0";
+
     /**
      * Create a new controller instance.
      *
@@ -44,7 +47,7 @@ class UserController extends Controller
             ->first();
         if($user && count($user)>0){
             if($user->type == User::SISWA){
-                if($request->input('version')!="6.0"){
+                if($request->input('version')!=$this->v_student){
                     return response()->json(['status'=>0,'error'=>'Login gagal. Versi aplikasi masih lama. Harap update aplikasi pada playstore.']);
                 }
                 if($user->status==0){
@@ -54,7 +57,7 @@ class UserController extends Controller
                 return response()->json(['status'=>1,'data'=>$siswa]);
             }
             if($user->type == User::PENGAJAR){
-                if($request->input('version')!="7.0"){
+                if($request->input('version')!=$this->v_teacher){
                     return response()->json(['status'=>0,'error'=>'Login gagal. Versi aplikasi masih lama. Harap update aplikasi pada playstore.']);
                 }
                 if($user->status==0){
@@ -266,7 +269,7 @@ class UserController extends Controller
     public function cekProfilePengajar(Request $request)
     {
         if($request->input('version')==null){
-            return response()->json(['status'=>0,'error'=>'Login gagal. Versi aplikasi masih lama. Harap update aplikasi pada playstore.']);
+            return response()->json(['status'=>0,'error'=>'Versi aplikasi masih lama. Harap update aplikasi pada playstore.']);
         }
 
         $user_id = $request->input('user_id');
@@ -562,7 +565,7 @@ class UserController extends Controller
             $user->token = $token;
             $user->save();
 
-            $to = 'wijaya.imd@gmail.com';//$request->input('email');
+            $to = $request->input('email');
             $subject = 'Edukezy - Reset Password';
             $from = 'info@edukezy.com';
 
