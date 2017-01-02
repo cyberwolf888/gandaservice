@@ -124,12 +124,14 @@ class JadwalController extends Controller
                 if($cekJadwal>0){
                     continue;
                 }
-                if($row->pengajar->user->status == 1 && $row->pengajar->zona_id != null){
+                //if(isset($row->pengajar->user) && $row->pengajar->user->status == 1 && $row->pengajar->zona_id != null){
+                if(isset($row->pengajar->user) && $row->pengajar->user->status == 1 && $row->pengajar->zona_id == $siswa->zona_id){
                     $cabang = Cabang::find($row->pengajar->zona_id);
                     $data[$i]['pengajar_id'] = $row->pengajar->id;
                     $data[$i]['mapel_id'] = $mapel_id;
                     $data[$i]['nama_pengajar'] = $row->pengajar->fullname;
-                    $data[$i]['label_tempat'] = $cabang->alamat."(".$cabang->nama.")";
+                    //$data[$i]['label_tempat'] = $cabang->alamat."(".$cabang->nama.")";
+                    $data[$i]['label_tempat'] = $cabang->nama;
                     $data[$i]['label_mapel'] = $row->mapel->nama." - ".$row->mapel->tingkat->nama;
                     $data[$i]['photo'] = $row->pengajar->photo;
                     $i++;
@@ -137,7 +139,44 @@ class JadwalController extends Controller
             }
             return response()->json(['status'=>1,'data'=>$data]);
         }else{
-            return response()->json(['status'=>0]);
+            return response()->json(['status'=>1,'data'=>[]]);
+        }
+    }
+
+    public function getJadwalByMapelLain(Request $request)
+    {
+        $user_id = $request->input('user_id');
+        $mapel_id = $request->input('mapel_id');
+        $user = User::find($user_id);
+        $siswa = $user->siswa;
+        $mapel_pengajar = MapelPengajar::where('mapel_id',$mapel_id)->with(['pengajar.user','mapel.tingkat'])->get();
+        if(count($mapel_pengajar)>0){
+            $data = array();
+            $i = 0;
+            foreach ($mapel_pengajar as $row){
+                $cekJadwal = Jadwal::whereRaw(DB::raw("pengajar_id = '".$row->pengajar_id."' AND
+                siswa_id = '".$siswa->id."' AND 
+                mapel_id = '".$mapel_id."' AND 
+                (status='1' OR status='3')"))->count();
+                if($cekJadwal>0){
+                    continue;
+                }
+                if(isset($row->pengajar->user) && $row->pengajar->user->status == 1 && $row->pengajar->zona_id != null){
+                //if(isset($row->pengajar->user) && $row->pengajar->user->status == 1 && $row->pengajar->zona_id == $siswa->zona_id){
+                    $cabang = Cabang::find($row->pengajar->zona_id);
+                    $data[$i]['pengajar_id'] = $row->pengajar->id;
+                    $data[$i]['mapel_id'] = $mapel_id;
+                    $data[$i]['nama_pengajar'] = $row->pengajar->fullname;
+                    //$data[$i]['label_tempat'] = $cabang->alamat."(".$cabang->nama.")";
+                    $data[$i]['label_tempat'] = $cabang->nama;
+                    $data[$i]['label_mapel'] = $row->mapel->nama." - ".$row->mapel->tingkat->nama;
+                    $data[$i]['photo'] = $row->pengajar->photo;
+                    $i++;
+                }
+            }
+            return response()->json(['status'=>1,'data'=>$data]);
+        }else{
+            return response()->json(['status'=>0,'data'=>[]]);
         }
     }
 
