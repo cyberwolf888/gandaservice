@@ -19,7 +19,7 @@ use Illuminate\Http\Request;
 class UserController extends Controller
 {
     public $v_teacher = "8.0";
-    public $v_student = "7.0";
+    public $v_student = "8.0";
 
     /**
      * Create a new controller instance.
