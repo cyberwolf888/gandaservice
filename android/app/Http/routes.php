@@ -113,8 +113,12 @@ $app->get('/resetpassword/{token}', ['as'=>'verifyToken','uses' => 'UserControll
 $app->post('/setPassword', ['as'=>'setPassword','uses' => 'UserController@setPassword']);
 
 $app->get('/test', function(){
-    return '<meta http-equiv="refresh" content="0; url=https://edukezy.com/verifikasi.php" />';
-    //redirect("https://edukezy.com/verifikasi.php");
+    $onesignal = new \App\Plugins\OneSignal();
+    $onesignal->app_type = \App\Plugins\OneSignal::PENGAJAR;
+    $onesignal->title = "Edukezy Teacher";
+    $onesignal->url = "https://edukezy.com/jadwal.php";
+    $onesignal->message = "Ada request siswa baru.";
+    $onesignal->sendMessageAdmin();
 });
 
 $app->get('/resend', function(){

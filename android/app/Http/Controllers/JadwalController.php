@@ -297,6 +297,38 @@ class JadwalController extends Controller
                     $onesignal->message = "Ada request siswa baru.";
                     $onesignal->sendMessageTo([$notif->onesignal_id]);
                 }
+
+                //notif ke admin
+                $n_url = "https://edukezy.com/jadwal.php";
+                $onesignal = new \App\Plugins\OneSignal();
+                $onesignal->app_type = \App\Plugins\OneSignal::PENGAJAR;
+                $onesignal->title = "Edukezy Teacher";
+                $onesignal->url = $n_url;
+                $onesignal->message = "Ada request siswa baru.";
+                $onesignal->sendMessageAdmin();
+
+                //notif email
+                $to = 'info@edukezy.com';
+                $subject = 'Pesanan Baru';
+                $from = 'info@edukezy.com';
+
+                $headers  = 'MIME-Version: 1.0' . "\r\n";
+                $headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
+                $headers .= 'From: '.$from."\r\n".
+                    'Reply-To: '.$from."\r\n" .
+                    'X-Mailer: PHP/' . phpversion();
+
+                $message = '<html><body>';
+                $message .= '<h3 style="color:#000000;">Ada Pesanan Baru</h3>';
+                $message .= '<p style="color:#000000;font-size:18px;">Silahkan klik link berikut untuk cek pesanan baru: <a href="'.$n_url.'">'.$n_url.'</a></p>';
+                $message .= '<p style="color:#000000;font-size:18px;">Nama Siswa: '.$siswa->fullname.'</p>';
+                $message .= '<p style="color:#000000;font-size:18px;">Nama Pengajar: '.$pengajar->fullname.'</p>';
+                $message .= '<p style="color:#000000;font-size:18px;">Mata Pelajaran: '.$mapel->nama.'-'.$mapel->tingkat->nama.'</p>';
+                $message .= '</body></html>';
+
+                mail($to, $subject, $message, $headers);
+
+
                 return response()->json(['status'=>1]);
             }else{
                 DetailJadwal::where('jadwal_id', $jadwal->id)->delete();
