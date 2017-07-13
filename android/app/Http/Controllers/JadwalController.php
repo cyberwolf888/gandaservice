@@ -398,6 +398,37 @@ class JadwalController extends Controller
         $jadwal = Jadwal::find($request->input('jadwal_id'));
         $jadwal->status = 2;
         if($jadwal->save()){
+
+            //Notif Aplikasi
+            $notif = Notif::where('user_id',$jadwal->siswa->user_id)->first();
+            if(count($notif)>0){
+                $onesignal = new \App\Plugins\OneSignal();
+                $onesignal->app_type = \App\Plugins\OneSignal::SISWA;
+                $onesignal->title = "Edukezy - Jadwal Ditolak";
+                $onesignal->message = "Maaf,Jadwal anda telah ditolak, silakan pilih pengajar lain.";
+                $onesignal->sendMessageTo([$notif->onesignal_id]);
+            }
+
+            //Notif Email
+            $user = User::find($jadwal->siswa->user_id);
+            $to = $user->email;
+            $subject = 'Edukezy - Jadwal Ditolak';
+            $from = 'info@edukezy.com';
+
+            $headers  = 'MIME-Version: 1.0' . "\r\n";
+            $headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
+            $headers .= 'From: '.$from."\r\n".
+                'Reply-To: '.$from."\r\n" .
+                'X-Mailer: PHP/' . phpversion();
+
+            $message = '<html><body>';
+            $message .= '<p style="color:#000000;font-size:18px;">Dear Siswa,</p>';
+            $message .= '<p style="color:#000000;font-size:18px;">Jadwal yang ada buat sebelumnya telah ditolak.</p>';
+            $message .= '<p style="color:#000000;font-size:18px;">Silakan lakukan pemesanan ulang dengan pengajar yang lain.</p>';
+            $message .= '</body></html>';
+
+            mail($to, $subject, $message, $headers);
+
             return response()->json(['status'=>1]);
         }else{
             return response()->json(['status'=>0]);

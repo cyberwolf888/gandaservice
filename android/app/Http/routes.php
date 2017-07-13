@@ -113,12 +113,23 @@ $app->get('/resetpassword/{token}', ['as'=>'verifyToken','uses' => 'UserControll
 $app->post('/setPassword', ['as'=>'setPassword','uses' => 'UserController@setPassword']);
 
 $app->get('/test', function(){
-    $onesignal = new \App\Plugins\OneSignal();
-    $onesignal->app_type = \App\Plugins\OneSignal::PENGAJAR;
-    $onesignal->title = "Edukezy Teacher";
-    $onesignal->url = "https://edukezy.com/jadwal.php";
-    $onesignal->message = "Ada request siswa baru.";
-    $onesignal->sendMessageAdmin();
+    $to = 'wijaya.imd@gmail.com';
+    $subject = 'Edukezy - Jadwal Ditolak';
+    $from = 'info@edukezy.com';
+
+    $headers  = 'MIME-Version: 1.0' . "\r\n";
+    $headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
+    $headers .= 'From: '.$from."\r\n".
+        'Reply-To: '.$from."\r\n" .
+        'X-Mailer: PHP/' . phpversion();
+
+    $message = '<html><body>';
+    $message .= '<p style="color:#000000;font-size:18px;">Dear Siswa,</p>';
+    $message .= '<p style="color:#000000;font-size:18px;">Jadwal yang ada buat sebelumnya telah ditolak.</p>';
+    $message .= '<p style="color:#000000;font-size:18px;">Silakan lakukan pemesanan ulang dengan pengajar yang lain.</p>';
+    $message .= '</body></html>';
+
+    mail($to, $subject, $message, $headers);
 });
 
 $app->get('/resend', function(){
